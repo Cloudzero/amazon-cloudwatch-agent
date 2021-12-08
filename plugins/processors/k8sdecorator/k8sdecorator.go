@@ -59,6 +59,8 @@ OUTER:
 		if !k.DisableMetricExtraction {
 			structuredlogsadapter.TagMetricRule(metric)
 		}
+		// CloudZero remove Custom Metrics
+		//structuredlogsadapter.TagMetricRule(metric)
 		structuredlogsadapter.TagLogGroup(metric)
 		metric.AddTag(logscommon.LogStreamNameTag, k.NodeName)
 		out = append(out, metric)
