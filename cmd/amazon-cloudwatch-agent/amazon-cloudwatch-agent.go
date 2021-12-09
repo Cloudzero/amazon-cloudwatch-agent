@@ -260,8 +260,7 @@ func runAgent(ctx context.Context,
 	}
 
 	logger.SetupLogging(logConfig)
-	log.Printf("I! Starting AmazonCloudWatchAgent %s", "CloudZero Agent version 1.59.0")
-	//log.Printf("I! Starting AmazonCloudWatchAgent %s", agentinfo.Version())
+	log.Printf("I! Starting AmazonCloudWatchAgent %s", agentinfo.Version())
 
 	if *fTest || *fTestWait != 0 {
 		testWaitDuration := time.Duration(*fTestWait) * time.Second
