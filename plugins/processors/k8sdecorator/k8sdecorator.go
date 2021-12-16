@@ -53,7 +53,8 @@ OUTER:
 		}
 		structuredlogsadapter.AddKubernetesInfo(metric, kubernetesBlob)
 		structuredlogsadapter.TagMetricSource(metric)
-		structuredlogsadapter.TagMetricRule(metric)
+		// CloudZero
+		//structuredlogsadapter.TagMetricRule(metric)
 		structuredlogsadapter.TagLogGroup(metric)
 		metric.AddTag(logscommon.LogStreamNameTag, k.NodeName)
 		out = append(out, metric)
