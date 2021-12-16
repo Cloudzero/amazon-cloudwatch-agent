@@ -69,7 +69,8 @@ func (c *K8sClient) init() {
 	c.Pod = new(podClient)
 	c.Node = new(nodeClient)
 	c.Job = new(jobClient)
-	c.ReplicaSet = new(replicaSetClient)
+	c.ReplicaSet = nil
+	//c.ReplicaSet = new(replicaSetClient)
 	c.inited = true
 }
 
