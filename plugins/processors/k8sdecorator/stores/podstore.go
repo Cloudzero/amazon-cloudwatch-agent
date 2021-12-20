@@ -12,8 +12,10 @@ import (
 	"time"
 
 	. "github.com/aws/amazon-cloudwatch-agent/internal/containerinsightscommon"
+	"github.com/aws/amazon-cloudwatch-agent/internal/k8sCommon/k8sclient"
 	"github.com/aws/amazon-cloudwatch-agent/internal/k8sCommon/kubeletutil"
 	"github.com/aws/amazon-cloudwatch-agent/internal/mapWithExpiry"
+	"github.com/aws/amazon-cloudwatch-agent/profiler"
 	"github.com/influxdata/telegraf"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -540,20 +542,17 @@ func (p *PodStore) addPodOwnersAndPodName(metric telegraf.Metric, pod *corev1.Po
 		if owner.Kind != "" && owner.Name != "" {
 			kind := owner.Kind
 			name := owner.Name
-			/*
-				if owner.Kind == ReplicaSet {
-					rsToDeployment := k8sclient.Get().ReplicaSet.ReplicaSetToDeployment()
-					if parent := rsToDeployment[owner.Name]; parent != "" {
-						kind = Deployment
-						name = parent
-					} else if parent := parseDeploymentFromReplicaSet(owner.Name); parent != "" {
-						profiler.Profiler.AddStats([]string{"k8sdecorator", "podstore", "rsToDeploymentMiss"}, 1)
-						kind = Deployment
-						name = parent
-					}
-				} else
-			*/
-			if owner.Kind == Job {
+			if owner.Kind == ReplicaSet && k8sclient.Get().ReplicaSet != nil {
+				rsToDeployment := k8sclient.Get().ReplicaSet.ReplicaSetToDeployment()
+				if parent := rsToDeployment[owner.Name]; parent != "" {
+					kind = Deployment
+					name = parent
+				} else if parent := parseDeploymentFromReplicaSet(owner.Name); parent != "" {
+					profiler.Profiler.AddStats([]string{"k8sdecorator", "podstore", "rsToDeploymentMiss"}, 1)
+					kind = Deployment
+					name = parent
+				}
+			} else if owner.Kind == Job {
 				if parent := parseCronJobFromJob(owner.Name); parent != "" {
 					kind = CronJob
 					name = parent
