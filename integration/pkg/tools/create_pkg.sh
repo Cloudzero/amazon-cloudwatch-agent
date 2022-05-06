@@ -11,8 +11,8 @@ COMMON_CONFIG_PATH=/tmp/AmazonCWAgentPackage/opt/aws/amazon-cloudwatch-agent/etc
 SAMPLE_SUFFIX=SAMPLE_DO_NOT_MODIFY
 mv ${COMMON_CONFIG_PATH} ${COMMON_CONFIG_PATH}.${SAMPLE_SUFFIX}
 if [ $? -ne 0 ]; then
-    echo "Failed to mv common-config.toml"
-    exit 1
+     echo "Failed to mv common-config.toml"
+     exit 1
 fi
 
 mkdir /tmp/AmazonAgentScripts
@@ -26,7 +26,7 @@ mkdir artifact
 sudo pkgbuild --root /tmp/AmazonCWAgentPackage/ --install-location "/" --scripts /tmp/AmazonAgentScripts --identifier com.amazon.cloudwatch.agent --version=$AGENT_VERSION artifact/amazon-cloudwatch-agent.pkg
 aws s3 cp ./artifact/amazon-cloudwatch-agent.pkg "s3://$1/integration-test/packaging/$2/amazon-cloudwatch-agent.pkg"
 
-#TODO uncomment when signing is implemented
+#TODO uncomment for mac specific signing gpg is supported
 ## create a package.tar.gz for the uploding it to signing bucket
 #tar -cvzf artifact.gz -C artifact .
 #tar -cvzf  package.tar.gz manifest.yaml artifact.gz

@@ -42,16 +42,19 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/Jeffail/gabs v1.4.0
 	github.com/aws/aws-sdk-go v1.30.15
-	github.com/aws/aws-sdk-go-v2 v1.13.0
-	github.com/aws/aws-sdk-go-v2/config v1.13.1
+	github.com/aws/aws-sdk-go-v2 v1.16.3
+	github.com/aws/aws-sdk-go-v2/config v1.15.3
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.3
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.18.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.15.4
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.29.0
-	github.com/aws/smithy-go v1.10.0
+	github.com/aws/smithy-go v1.11.2
 	github.com/bigkevmcd/go-configparser v0.0.0-20200217161103-d137835d2579
 	github.com/docker/docker v1.13.1
 	github.com/go-kit/kit v0.10.0
 	github.com/gobwas/glob v0.2.3
 	github.com/google/cadvisor v0.36.0
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.7
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/influxdata/telegraf v0.0.0-00010101000000-000000000000
@@ -65,7 +68,7 @@ require (
 	github.com/prometheus/common v0.9.1
 	github.com/prometheus/prometheus v1.8.2-0.20200420081721-18254838fbe2
 	github.com/shirou/gopsutil v2.20.5+incompatible
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.7.0
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a

@@ -21,9 +21,11 @@ resource "aws_instance" "integration-test" {
       "sudo cp original.pem /opt/aws/amazon-cloudwatch-agent/original.pem",
       "sudo cp combine.pem /opt/aws/amazon-cloudwatch-agent/combine.pem",
       "export LOCAL_STACK_HOST_NAME=${var.local_stack_host_name}",
+      "export AWS_REGION=${var.region}",
       "echo run tests with the tag integration, one at a time, and verbose",
       "cd ~/amazon-cloudwatch-agent",
-      "make integration-test"
+      "echo run sanity test && go test ./integration/test/sanity -p 1 -v --tags=integration",
+      "go test ${var.test_dir} -p 1 -v --tags=integration"
     ]
     connection {
       type        = "ssh"

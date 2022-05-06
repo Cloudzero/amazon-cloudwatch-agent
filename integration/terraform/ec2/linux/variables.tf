@@ -83,3 +83,8 @@ variable "test_name" {
   type = string
   default = ""
 }
+
+variable "test_dir" {
+  type = string
+  default = ""
+}
