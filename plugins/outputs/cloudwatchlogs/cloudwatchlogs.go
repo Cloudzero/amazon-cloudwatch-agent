@@ -146,6 +146,13 @@ func (c *CloudWatchLogs) writeMetricAsStructuredLog(m telegraf.Metric) {
 	cwd.switchToEMF()
 	cwd.pusher.RetryDuration = metricRetryTimeout
 
+	// CloudZero - The CloudZero Platform only processes the "Pod" Metrics.
+	// Filter out non-Pod Metrics
+	metricType := m.Tags()["Type"]
+	if !(metricType == "Pod") {
+		return
+	}
+
 	e := c.getLogEventFromMetric(m)
 	if e == nil {
 		return
