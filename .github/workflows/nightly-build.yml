@@ -8,6 +8,7 @@ on:
 jobs:
 
   build:
+    if: github.repository_owner == 'aws'
     name: Upload Nightly Binaries
     runs-on: ubuntu-latest
     steps:
