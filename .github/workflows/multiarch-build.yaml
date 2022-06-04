@@ -4,6 +4,7 @@ name: Multi-arch Builds
 
 # Controls when the workflow will run
 on:
+  push:
   workflow_dispatch:
 
 permissions: 
