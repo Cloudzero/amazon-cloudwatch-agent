@@ -66,7 +66,8 @@ jobs:
           context: .
           file: amazon-cloudwatch-container-insights/cloudwatch-agent-dockerfile/source/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: erase
-          labels: erase
+          push: true
+          tags: ${{ github.repository_owner }}/${{ github.repository }}/cloudwatch-agent:${{ github.sha }}
 
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
