@@ -64,7 +64,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: amazon-cloudwatch-container-insights/cloudwatch-agent-dockerfile/source/
-          platforms: linux/amd64,linux/arm/v7
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: erase
           labels: erase
