@@ -27,14 +27,31 @@ jobs:
 
       - name: last tag
         run: |
-          LAST_TAG=$(git describe HEAD --tags | grep -Eo "^v[0-9]+(\.[0-9]+)*")
+          if ${{ github.ref == 'irefs/heads/cloudzero-optimized' }}; then
+            LAST_TAG=$(git describe HEAD --tags | grep -Eo "^v[0-9]+(\.[0-9]+)*")
+          else
+            LAST_TAG=$(git describe HEAD --tags)
+          fi
           echo "LAST_TAG=${LAST_TAG}"
           echo "LAST_TAG=${LAST_TAG}" >> $GITHUB_ENV
 
+      - name: set up semver
+        uses: madhead/semver-utils@latest
+        id: version
+        with:
+          # A version to work with
+          version: ${{ env.LAST_TAG }}
+
+      - name: Get NEXT_TAG value
+        run: |
+          NEXT_TAG=${{ steps.version.outputs.inc-patch }}
+          echo "NEXT_TAG=${NEXT_TAG}"
+          echo "NEXT_TAG=${NEXT_TAG}" >> $GITHUB_ENV
+
       - name: add version
         run: |
-          make create-version-file
-          make copy-version-file
+          mkdir -p build/bin
+          echo '${{ env.NEXT_TAG }}' > build/bin/CEAGENT_VERSION
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
@@ -46,7 +63,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: repository owner
-        run: echo ${{ github.repository_owner }}
+        run: echo '${{ github.repository_owner }}'
 
       - name: Login to GHCR
         if: github.event_name != 'pull_request'
@@ -70,6 +87,7 @@ jobs:
           # list of Docker images to use as base name for tags
           images: |
             cloudzero/cloudwatch-agent
+            ghcr.io/cloudzero/cloudzero-agent
             #  ghcr.io/cloudzero/cloudwatch-agent
           # generate Docker tags based on the following events/attributes
           tags: |
@@ -82,8 +100,9 @@ jobs:
             type=sha
 
       - name: debug meta
-        run: echo ${{ steps.meta_pms.outputs.tags }} && echo ${{ steps.meta_pms.outputs }}
-
+        run: |
+          echo '${{ steps.meta_cloudzero_agent.outputs.tags }}'
+          echo '${{ steps.meta_cloudzero_agent.outputs }}'
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -91,8 +110,9 @@ jobs:
           context: .
           file: amazon-cloudwatch-container-insights/cloudwatch-agent-dockerfile/source/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ghcr.io/cloudzero/cloudzero-agent:${{ env.LAST_TAG }}
+          push: ${{ github.ref == 'irefs/heads/cloudzero-optimized' }}
+          tags: ${{ steps.meta_cloudzero_agnet.outputs.tags }}
+            #tags: ghcr.io/cloudzero/cloudzero-agent:${{ env.LAST_TAG }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
