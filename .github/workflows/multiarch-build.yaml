@@ -34,7 +34,7 @@ jobs:
 
       - name: last tag
         run: |
-          if ${{ github.ref == 'irefs/heads/cloudzero-optimized' }}; then
+          if ${{ github.ref == 'refs/heads/cloudzero-optimized' }}; then
             LAST_TAG=$(git describe HEAD --tags | grep -Eo "^v[0-9]+(\.[0-9]+)*")
           else
             LAST_TAG=$(git describe HEAD --tags)
@@ -51,7 +51,7 @@ jobs:
 
       - name: Get NEXT_TAG value
         run: |
-          if ${{ github.ref == 'irefs/heads/cloudzero-optimized' }}; then
+          if ${{ github.ref == 'refs/heads/cloudzero-optimized' }}; then
             NEXT_TAG=${{ steps.version.outputs.inc-patch }}
           else
             NEXT_TAG=${{ env.LAST_TAG }}
@@ -102,9 +102,9 @@ jobs:
             #  ghcr.io/cloudzero/cloudwatch-agent
           # generate Docker tags based on the following events/attributes
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=raw,value=${{env.NEXT_TAG}}
+            #type=ref,event=branch
+            #type=ref,event=pr
+            type=semver,patern={{version}},value=${{env.NEXT_TAG}}
 
       - name: debug meta
         run: |
@@ -117,7 +117,7 @@ jobs:
           context: .
           file: amazon-cloudwatch-container-insights/cloudwatch-agent-dockerfile/source/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.ref == 'irefs/heads/cloudzero-optimized' }}
+          push: ${{ github.ref == 'refs/heads/cloudzero-optimized' }}
           tags: ${{ steps.meta_cloudzero_agnet.outputs.tags }}
             #tags: ghcr.io/cloudzero/cloudzero-agent:${{ env.LAST_TAG }}
 
