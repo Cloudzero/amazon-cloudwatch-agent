@@ -104,7 +104,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=pr
-            type=raw,value={{env.NEXT_TAG}}
+            type=raw,value=${{env.NEXT_TAG}}
 
       - name: debug meta
         run: |
