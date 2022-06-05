@@ -98,10 +98,9 @@ jobs:
             #  ghcr.io/cloudzero/cloudwatch-agent
           # generate Docker tags based on the following events/attributes
           tags: |
-            type=schedule
             type=ref,event=branch
             type=ref,event=pr
-            type=semver,pattern={{ env.NEXT_TAG }
+            type=semver,pattern={{raw}},value={{env.NEXT_TAG}}
 
       - name: debug meta
         run: |
