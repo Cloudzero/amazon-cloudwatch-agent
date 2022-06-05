@@ -19,9 +19,22 @@ jobs:
       # Get the repositery's code
       - name: Checkout
         uses: actions/checkout@v2
-      
+
+      # the version of the container is the latest git tag.
+      # This pull in the git tags
+      - name: get fetch to update tags locally
+        run: git fetch --prune --unshallow --tags
+
+      - name: last tag
+        run: |
+          LAST_TAG=$(git describe HEAD --tags | grep -Eo "^v[0-9]+(\.[0-9]+)*")
+          echo "LAST_TAG=${LAST_TAG}"
+          echo "LAST_TAG=${LAST_TAG}" >> $GITHUB_ENV
+
       - name: add version
-        run: make copy-version-file
+        run: |
+          make create-version-file
+          make copy-version-file
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
@@ -79,7 +92,7 @@ jobs:
           file: amazon-cloudwatch-container-insights/cloudwatch-agent-dockerfile/source/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/cloudzero/cloudzero-agent:${{ github.sha }}
+          tags: ghcr.io/cloudzero/cloudzero-agent:${{ env.LAST_TAG }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
