@@ -104,7 +104,7 @@ jobs:
           tags: |
             #type=ref,event=branch
             #type=ref,event=pr
-            type=semver,patern={{version}},value=${{env.NEXT_TAG}}
+            type=semver,pattern={{version}},value=${{env.NEXT_TAG}}
 
       - name: debug meta
         run: |
