@@ -64,6 +64,14 @@ jobs:
           mkdir -p build/bin
           echo '${{ env.NEXT_TAG }}' > build/bin/CEAGENT_VERSION
 
+      - name: Build Changelog
+        uses: mikepenz/release-changelog-builder-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: debug changelog
+        run: echo '${{steps.github_release.outputs.changelog}}'
+
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -121,6 +129,7 @@ jobs:
 
       - name: Release
         if: ${{ github.ref == 'refs/heads/cloudzero-optimized' }}
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
