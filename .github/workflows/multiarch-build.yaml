@@ -104,12 +104,17 @@ jobs:
           tags: |
             #type=ref,event=branch
             #type=ref,event=pr
-            type=semver,pattern={{version}},value=${{env.NEXT_TAG}}
+            type=raw,value=${{env.NEXT_TAG}}
+          labels: |
+            org.cloudzero.image.version=${{env.NEXT_TAG}}
+            org.cloudzero.image.tag=${{env.NEXT_TAG}}
+            org.cloudzero.image.name=cloudzero-agent
+
 
       - name: debug meta
         run: |
           echo '${{ steps.meta_cloudzero_agent.outputs.tags }}'
-          echo '${{ steps.meta.outputs.labels }}'
+          echo '${{ steps.meta_cloudzero_agent.outputs.labels }}'
           echo '${{ toJSON(steps.meta_cloudzero_agent.outputs) }}'
 
       - name: Build and push
