@@ -1,4 +1,11 @@
-# This is a basic workflow to help you get started with Actions
+# the works flow will build the code and only
+# deploy/push the new container to a container
+# repository when it on the brach cloudzero_optimized
+#
+# Since CloudZero has changes in the fork that will never be
+# push back to AWS, we will manage our changes on
+# branch cloudzero_optimized
+
 
 name: Multi-arch Builds
 
@@ -48,7 +55,7 @@ jobs:
           echo "NEXT_TAG=${NEXT_TAG}"
           echo "NEXT_TAG=${NEXT_TAG}" >> $GITHUB_ENV
 
-      - name: add version
+      - name: add version for build
         run: |
           mkdir -p build/bin
           echo '${{ env.NEXT_TAG }}' > build/bin/CEAGENT_VERSION
@@ -86,7 +93,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            cloudzero/cloudwatch-agent
+            cloudzero/cloudzero-agent
             ghcr.io/cloudzero/cloudzero-agent
             #  ghcr.io/cloudzero/cloudwatch-agent
           # generate Docker tags based on the following events/attributes
@@ -94,15 +101,12 @@ jobs:
             type=schedule
             type=ref,event=branch
             type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha
+            type=semver,pattern={{ env.NEXT_TAG }
 
       - name: debug meta
         run: |
           echo '${{ steps.meta_cloudzero_agent.outputs.tags }}'
-          echo '${{ steps.meta_cloudzero_agent.outputs }}'
+          echo '${{ toJSON(steps.meta_cloudzero_agent.outputs) }}'
 
       - name: Build and push
         uses: docker/build-push-action@v2
