@@ -54,7 +54,7 @@ jobs:
           if ${{ github.ref == 'irefs/heads/cloudzero-optimized' }}; then
             NEXT_TAG=${{ steps.version.outputs.inc-patch }}
           else
-            NEXT_TAG={{ env.LAST_TAG }}
+            NEXT_TAG=${{ env.LAST_TAG }}
           fi
           echo "NEXT_TAG=${NEXT_TAG}"
           echo "NEXT_TAG=${NEXT_TAG}" >> $GITHUB_ENV
