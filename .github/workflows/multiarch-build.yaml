@@ -65,12 +65,13 @@ jobs:
           echo '${{ env.NEXT_TAG }}' > build/bin/CEAGENT_VERSION
 
       - name: Build Changelog
+        id: build_changelog
         uses: mikepenz/release-changelog-builder-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: debug changelog
-        run: echo '${{steps.github_release.outputs.changelog}}'
+        run: echo '${{steps.build_changelog.outputs.changelog}}'
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
