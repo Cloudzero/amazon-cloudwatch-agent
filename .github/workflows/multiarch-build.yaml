@@ -95,27 +95,16 @@ jobs:
         id: meta_cloudzero_agent
         uses: docker/metadata-action@v3
         with:
-          # list of Docker images to use as base name for tags
           images: |
             cloudzero/cloudzero-agent
             ghcr.io/cloudzero/cloudzero-agent
-            #  ghcr.io/cloudzero/cloudwatch-agent
           # generate Docker tags based on the following events/attributes
           tags: |
-            #type=ref,event=branch
-            #type=ref,event=pr
             type=raw,value=${{env.NEXT_TAG}}
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'cloudzero_optimized') }}
           labels: |
-            org.cloudzero.image.version=${{env.NEXT_TAG}}
-            org.cloudzero.image.tag=${{env.NEXT_TAG}}
-            org.cloudzero.image.name=cloudzero-agent
-
-
-      - name: debug meta
-        run: |
-          echo '${{ steps.meta_cloudzero_agent.outputs.tags }}'
-          echo '${{ steps.meta_cloudzero_agent.outputs.labels }}'
-          echo '${{ toJSON(steps.meta_cloudzero_agent.outputs) }}'
+            app.kubernetes.io/name=cloudzero-agent
+            app.kubernetes.io/version= ${{env.NEXT_TAG}}
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -128,4 +117,12 @@ jobs:
             #tags: ghcr.io/cloudzero/cloudzero-agent:${{ env.LAST_TAG }}
 
       - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+        run: echo '${{ steps.docker_build.outputs.digest }}'
+
+      - name: Release
+        if: ${{ github.ref == 'refs/heads/cloudzero-optimized' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: ${{ env.NEXT_TAG }}
+          tag_name: ${{ env.NEXT_TAG }}
