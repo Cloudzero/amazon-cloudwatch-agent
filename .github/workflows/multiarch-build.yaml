@@ -125,5 +125,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: ${{ env.NEXT_TAG }}
-          tag_name: ${{ env.NEXT_TAG }}
+          name: V${{ env.NEXT_TAG }}
+          tag_name: v${{ env.NEXT_TAG }}
