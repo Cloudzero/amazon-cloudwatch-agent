@@ -122,6 +122,8 @@ jobs:
       - name: Release
         if: ${{ github.ref == 'refs/heads/cloudzero-optimized' }}
         uses: softprops/action-gh-release@v1
+        permissions:
+          contents: write
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
