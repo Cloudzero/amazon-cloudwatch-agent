@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
 
 permissions: 
-  contents: read
+  contents: write
   packages: write
   
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -122,10 +122,9 @@ jobs:
       - name: Release
         if: ${{ github.ref == 'refs/heads/cloudzero-optimized' }}
         uses: softprops/action-gh-release@v1
-        permissions:
-          contents: write
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           name: V${{ env.NEXT_TAG }}
           tag_name: v${{ env.NEXT_TAG }}
+
