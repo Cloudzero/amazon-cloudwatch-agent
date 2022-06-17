@@ -105,6 +105,10 @@ jobs:
           labels: |
             app.kubernetes.io/name=cloudzero-agent
             app.kubernetes.io/version=v${{env.NEXT_TAG}}
+            org.opencontainers.image.base.name=cloudzero-agent
+            org.opencontainers.image.description=https://github.com/Cloudzero/amazon-cloudwatch-agent/tree/cloudzero-optimized
+            org.opencontainers.image.version=${{env.NEXT_TAG}}
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -114,7 +118,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.ref == 'refs/heads/cloudzero-optimized' }}
           tags: ${{ steps.meta_cloudzero_agent.outputs.tags }}
-            #tags: ghcr.io/cloudzero/cloudzero-agent:${{ env.LAST_TAG }}
+          labels: ${{ steps.meta_cloudzero_agent.outputs.labels }}
 
       - name: Image digest
         run: echo '${{ steps.docker_build.outputs.digest }}'
