@@ -116,12 +116,15 @@ jobs:
           context: .
           file: amazon-cloudwatch-container-insights/cloudwatch-agent-dockerfile/source/Dockerfile
           platforms: linux/amd64,linux/arm64
+          load: true
           push: ${{ github.ref == 'refs/heads/cloudzero-optimized' }}
           tags: ${{ steps.meta_cloudzero_agent.outputs.tags }}
           labels: ${{ steps.meta_cloudzero_agent.outputs.labels }}
 
       - name: Image digest
-        run: echo '${{ steps.docker_build.outputs.digest }}'
+        run: |
+          echo '${{ steps.docker_build.outputs.digest }}'
+          echo '${{ steps.docker_build.outputs }}'
 
       - name: Release
         if: ${{ github.ref == 'refs/heads/cloudzero-optimized' }}
