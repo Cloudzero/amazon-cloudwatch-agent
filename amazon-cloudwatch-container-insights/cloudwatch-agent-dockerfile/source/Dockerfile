@@ -8,6 +8,11 @@ FROM $GO_IMAGE as builder
 ARG TARGETARCH
 RUN mkdir -p /go/src/github.com/aws/amazon-cloudwatch-agent/
 WORKDIR /go/src/github.com/aws/amazon-cloudwatch-agent/
+# Note: Speed up builds. https://petomalina.medium.com/using-go-mod-download-to-speed-up-golang-docker-builds-707591336888
+COPY go.mod .
+Copy go.sum .
+RUN go mod download
+
 
 ARG GO111MODULE="on"
 ENV GO111MODULE=${GO111MODULE}

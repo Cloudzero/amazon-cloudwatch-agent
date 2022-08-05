@@ -27,12 +27,17 @@ const (
 	memoryKey          = "memory"
 	cpuKey             = "cpu"
 	splitRegexStr      = "\\.|-"
+	dashRandomRegexStr = `(?P<var>[\w-]*)-[a-zA-Z0-9]{7,10}`
 	kubeProxy          = "kube-proxy"
 	ignoreAnnotation   = "aws.amazon.com/cloudwatch-agent-ignore"
 )
 
 var (
 	re = regexp.MustCompile(splitRegexStr)
+)
+
+var (
+	dashRandomRegex = regexp.MustCompile(dashRandomRegexStr)
 )
 
 type cachedEntry struct {
@@ -552,6 +557,13 @@ func (p *PodStore) addPodOwnersAndPodName(metric telegraf.Metric, pod *corev1.Po
 					profiler.Profiler.AddStats([]string{"k8sdecorator", "podstore", "rsToDeploymentMiss"}, 1)
 					kind = Deployment
 					name = parent
+				}
+				// CloudZero remove random ending e.g. "-[random number]"
+			} else if owner.Kind == ReplicaSet && k8sclient.Get().ReplicaSet == nil {
+				subMatch := dashRandomRegex.FindStringSubmatch(owner.Name)
+				if len(subMatch) != 0 {
+					kind = Deployment
+					name = subMatch[1]
 				}
 			} else if owner.Kind == Job {
 				if parent := parseCronJobFromJob(owner.Name); parent != "" {
