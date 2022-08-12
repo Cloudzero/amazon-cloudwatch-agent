@@ -558,13 +558,6 @@ func (p *PodStore) addPodOwnersAndPodName(metric telegraf.Metric, pod *corev1.Po
 					kind = Deployment
 					name = parent
 				}
-				// CloudZero remove random ending e.g. "-[random number]"
-			} else if owner.Kind == ReplicaSet && k8sclient.Get().ReplicaSet == nil {
-				subMatch := dashRandomRegex.FindStringSubmatch(owner.Name)
-				if len(subMatch) != 0 {
-					kind = Deployment
-					name = subMatch[1]
-				}
 			} else if owner.Kind == Job {
 				if parent := parseCronJobFromJob(owner.Name); parent != "" {
 					kind = CronJob
