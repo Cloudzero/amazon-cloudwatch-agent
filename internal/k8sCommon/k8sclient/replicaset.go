@@ -134,6 +134,11 @@ func transformFuncReplicaSet(obj interface{}) (interface{}, error) {
 	if !ok {
 		return nil, errors.New(fmt.Sprintf("input obj %v is not ReplicaSet type", obj))
 	}
+	// CloudZero, only track ReplicaSet that manage Pods
+	// refresh will pick up changes.  e.g. a Deployment rollback
+	if replicaSet.Status.Replicas == 0 {
+		return nil, nil
+	}
 	info := new(replicaSetInfo)
 	info.name = replicaSet.Name
 	info.owners = []*replicaSetOwner{}

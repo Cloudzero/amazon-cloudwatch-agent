@@ -53,6 +53,14 @@ func (s *ObjStore) Add(obj interface{}) error {
 		return err
 	}
 
+	// CloudZero - Allow ignoring Replicaset with zero active pods.
+	// Handle a nil return
+	if toCacheObj == nil {
+		// Nothing to to add to cache
+		log.Printf("I! ignoring update obj")
+		return nil
+	}
+
 	s.Lock()
 	defer s.Unlock()
 
