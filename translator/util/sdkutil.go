@@ -22,8 +22,10 @@ const (
 	DEFAULT_PROFILE = "AmazonCloudWatchAgent"
 )
 
-var DetectRegion func(mode string, credsConfig map[string]string) string = detectRegion
-var DetectCredentialsPath func() string = detectCredentialsPath
+var DetectRegion = detectRegion
+var DetectCredentialsPath = detectCredentialsPath
+var DefaultEC2Region = defaultEC2Region
+var DefaultECSRegion = defaultECSRegion
 var runInAws = os.Getenv(config.RUN_IN_AWS)
 
 func DetectAgentMode(configuredMode string) string {
@@ -35,13 +37,13 @@ func DetectAgentMode(configuredMode string) string {
 		fmt.Println("I! Detected from ENV instance is EC2")
 		return config.ModeEC2
 	}
-	
-	if defaultEC2Region() != "" {
+
+	if DefaultEC2Region() != "" {
 		fmt.Println("I! Detected the instance is EC2")
 		return config.ModeEC2
 	}
 
-	if defaultECSRegion() != "" {
+	if DefaultECSRegion() != "" {
 		fmt.Println("I! Detected the instance is ECS")
 		return config.ModeEC2
 	}
@@ -93,15 +95,15 @@ func detectRegion(mode string, credsConfig map[string]string) (region string) {
 	// For ec2, fallback to metadata when no region info found in credential profile.
 	if region == "" && mode == config.ModeEC2 {
 		fmt.Println("I! Trying to detect region from ec2")
-		region = defaultEC2Region()
+		region = DefaultEC2Region()
 	}
 
 	// try to get region from ecs metadata
 	if region == "" && mode == config.ModeEC2 {
 		fmt.Println("I! Trying to detect region from ecs")
-		region = defaultECSRegion()
+		region = DefaultECSRegion()
 	}
-	
+
 	return
 }
 
@@ -157,9 +159,8 @@ func GetCredentials(mode string, credsConfig map[string]string) (result map[stri
 	profile, hasProfile := credsConfig[commonconfig.CredentialProfile]
 	if hasProfile {
 		result[commonconfig.CredentialProfile] = profile
-	} else if mode == config.ModeOnPrem {
+	} else if (mode == config.ModeOnPrem) || (mode == config.ModeOnPremise) {
 		result[commonconfig.CredentialProfile] = DEFAULT_PROFILE
-
 	}
 	return
 }

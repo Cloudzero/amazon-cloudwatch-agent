@@ -77,6 +77,9 @@ type tailerSrc struct {
 	cleanUpFns      []func()
 }
 
+// Verify tailerSrc implements LogSrc
+var _ logs.LogSrc = (*tailerSrc)(nil)
+
 func NewTailerSrc(
 	group, stream, destination, stateFilePath string,
 	tailer *tail.Tail,
@@ -119,26 +122,26 @@ func (ts *tailerSrc) SetOutput(fn func(logs.LogEvent)) {
 	ts.startTailerOnce.Do(func() { go ts.runTail() })
 }
 
-func (ts tailerSrc) Group() string {
+func (ts *tailerSrc) Group() string {
 	return ts.group
 }
 
-func (ts tailerSrc) Stream() string {
+func (ts *tailerSrc) Stream() string {
 	return ts.stream
 }
 
-func (ts tailerSrc) Description() string {
+func (ts *tailerSrc) Description() string {
 	return ts.tailer.Filename
 }
 
-func (ts tailerSrc) Destination() string {
+func (ts *tailerSrc) Destination() string {
 	return ts.destination
 }
 
-func (ts tailerSrc) Retention() int {
+func (ts *tailerSrc) Retention() int {
 	return ts.retentionInDays
 }
-func (ts tailerSrc) Done(offset fileOffset) {
+func (ts *tailerSrc) Done(offset fileOffset) {
 	// ts.offsetCh will only be blocked when the runSaveState func has exited,
 	// which only happens when the original file has been removed, thus making
 	// Keeping its offset useless
@@ -275,6 +278,8 @@ func (ts *tailerSrc) cleanUp() {
 	if ts.autoRemoval {
 		if err := os.Remove(ts.tailer.Filename); err != nil {
 			log.Printf("W! [logfile] Failed to auto remove file %v: %v", ts.tailer.Filename, err)
+		} else {
+			log.Printf("I! [logfile] Successfully removed file %v with auto_removal feature", ts.tailer.Filename)
 		}
 	}
 	for _, clf := range ts.cleanUpFns {
@@ -311,7 +316,7 @@ func (ts *tailerSrc) runSaveState() {
 			log.Printf("W! [logfile] deleting state file %s", ts.stateFilePath)
 			err := os.Remove(ts.stateFilePath)
 			if err != nil {
-				log.Printf("E! [logfile] Error happened while deleting state file %s on cleanup", ts.stateFilePath)
+				log.Printf("W! [logfile] Error happened while deleting state file %s on cleanup: %v", ts.stateFilePath, err)
 			}
 			return
 		case <-ts.done:

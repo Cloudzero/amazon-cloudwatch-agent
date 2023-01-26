@@ -139,7 +139,7 @@ func (t *LogFile) Stop() {
 	close(t.done)
 }
 
-//Try to find if there is any new file needs to be added for monitoring.
+// Try to find if there is any new file needs to be added for monitoring.
 func (t *LogFile) FindLogSrc() []logs.LogSrc {
 	if !t.started {
 		return nil
@@ -167,9 +167,11 @@ func (t *LogFile) FindLogSrc() []logs.LogSrc {
 
 			if _, ok := dests[filename]; ok {
 				continue
-			} else if fileconfig.AutoRemoval { // This logic means auto_removal does not work with publish_multi_logs
+			} else if fileconfig.AutoRemoval {
+				// This logic means auto_removal does not work with publish_multi_logs
 				for _, dst := range dests {
-					dst.tailer.StopAtEOF() // Stop all other tailers in favor of the newly found file
+					// Stop all other tailers in favor of the newly found file
+					dst.tailer.StopAtEOF()
 				}
 			}
 
@@ -311,7 +313,7 @@ func (t *LogFile) getTargetFiles(fileconfig *FileConfig) ([]string, error) {
 	return targetFileList, nil
 }
 
-//The plugin will look at the state folder, and restore the offset of the file seeked if such state exists.
+// The plugin will look at the state folder, and restore the offset of the file seeked if such state exists.
 func (t *LogFile) restoreState(filename string) (int64, error) {
 	filePath := t.getStateFilePath(filename)
 
@@ -332,8 +334,10 @@ func (t *LogFile) restoreState(filename string) (int64, error) {
 		return 0, err
 	}
 
+	if offset < 0 {
+		return 0, fmt.Errorf("negative state file offset, %v, %v", filePath, offset)
+	}
 	t.Log.Infof("Reading from offset %v in %s", offset, filename)
-
 	return offset, nil
 }
 
