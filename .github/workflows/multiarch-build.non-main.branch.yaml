@@ -13,6 +13,7 @@ name: Multi-arch Builds
 on:
   push:
     branches:
+      - cloudzero-aws-main-pull-v1.247357.0
       - '!main' 
   workflow_dispatch:
 
