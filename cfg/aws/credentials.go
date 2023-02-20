@@ -60,9 +60,8 @@ var credentialsChain = make([]RootCredentialsProvider, 0)
 
 func getRootCredentialsFromChain(c *CredentialConfig) *credentials.Credentials {
 	for _, provider := range credentialsChain {
-		credentials := provider.Credentials(c)
-		if credentials != nil {
-			return credentials
+		if creds := provider.Credentials(c); creds != nil {
+			return creds
 		}
 	}
 	return nil
@@ -88,6 +87,12 @@ func getSession(config *aws.Config) *session.Session {
 		}
 	}
 	log.Printf("D! Successfully created credential sessions\n")
+	cred, err := ses.Config.Credentials.Get()
+	if err != nil {
+		log.Printf("E! Failed to get credential from session: %v", err)
+	} else {
+		log.Printf("D! Using credential %s from %s", cred.AccessKeyID, cred.ProviderName)
+	}
 	return ses
 }
 
@@ -96,6 +101,8 @@ func (c *CredentialConfig) rootCredentials() client.ConfigProvider {
 		Region:                        aws.String(c.Region),
 		CredentialsChainVerboseErrors: aws.Bool(true),
 		HTTPClient:                    &http.Client{Timeout: 1 * time.Minute},
+		LogLevel:                      SDKLogLevel(),
+		Logger:                        SDKLogger{},
 	}
 	config.Credentials = getRootCredentialsFromChain(c)
 	return getSession(config)
@@ -106,6 +113,8 @@ func (c *CredentialConfig) assumeCredentials() client.ConfigProvider {
 	config := &aws.Config{
 		Region:     aws.String(c.Region),
 		HTTPClient: &http.Client{Timeout: 1 * time.Minute},
+		LogLevel:   SDKLogLevel(),
+		Logger:     SDKLogger{},
 	}
 	config.Credentials = newStsCredentials(rootCredentials, c.RoleARN, c.Region)
 	return getSession(config)
@@ -143,6 +152,8 @@ func newStsCredentials(c client.ConfigProvider, roleARN string, region string) *
 			Region:              aws.String(region),
 			STSRegionalEndpoint: endpoints.RegionalSTSEndpoint,
 			HTTPClient:          &http.Client{Timeout: 1 * time.Minute},
+			LogLevel:            SDKLogLevel(),
+			Logger:              SDKLogger{},
 		}),
 		RoleARN:  roleARN,
 		Duration: stscreds.DefaultDuration,
@@ -156,6 +167,8 @@ func newStsCredentials(c client.ConfigProvider, roleARN string, region string) *
 			Endpoint:            aws.String(getFallbackEndpoint(fallbackRegion)),
 			STSRegionalEndpoint: endpoints.RegionalSTSEndpoint,
 			HTTPClient:          &http.Client{Timeout: 1 * time.Minute},
+			LogLevel:            SDKLogLevel(),
+			Logger:              SDKLogger{},
 		}),
 		RoleARN:  roleARN,
 		Duration: stscreds.DefaultDuration,

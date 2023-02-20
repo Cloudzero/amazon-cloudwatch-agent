@@ -1,0 +1,132 @@
+# the works flow will build the code and only
+# deploy/push the new container to a container
+# repository when it on the brach cloudzero_optimized
+#
+# Since CloudZero has changes in the fork that will never be
+# push back to AWS, we will manage our changes on
+# branch cloudzero_optimized
+
+
+name: Multi-arch Builds, local cache, for all branch not name main
+
+# Controls when the workflow will run
+on:
+  push:
+  #  branches:
+  #    - '!main'
+  workflow_dispatch:
+
+permissions: 
+  contents: write
+  packages: write
+  id-token: write
+  
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  multi-arch-build-cache-local:
+    runs-on: ubuntu-latest
+    environment: develop
+    steps:
+      # Get the repositery's code
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # the version of the container is the latest git tag.
+      # This pull in the git tags
+      - name: get fetch to update tags locally
+        if: ${{ !env.act }} # skip if running using act on local machine
+        run: git fetch --prune --unshallow --tags
+
+      - name: Set Image Name
+        run: |
+          echo "IMAGE_NAME=cloudzero/cloudzero-agent" >> $GITHUB_ENV
+
+      - name: Set Dynamic variable
+        run: |
+          echo "IMAGE_ID=$(echo ${{ secrets.ECR_REPO }}/${{ env.IMAGE_NAME }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
+
+      - name: Get NEXT_TAG value
+        run: |
+          echo "NEXT_TAG=${GITHUB_REF##*/}.${{ github.run_number }}"
+          echo "NEXT_TAG=${GITHUB_REF##*/}.${{ github.run_number }}" >> $GITHUB_ENV
+
+      - name: add version for build
+        run: |
+          mkdir -p build/bin
+          echo '${{ env.NEXT_TAG }}' > build/bin/CWAGENT_VERSION
+
+      # https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      # https://github.com/docker/setup-buildx-action
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/buildx-cache
+          key: ${{ github.ref }}-buildx
+          restore-keys: |
+            ${{ github.ref }}-buildx
+
+      - name: Setup AWS Credentials to Deploy to Research Branch
+        id: aws-deploy-credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.CZ_GITHUB_DEPLOY }}
+          role-session-name: github-non-main-branch
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Create ECR repo if missing
+        uses: byu-oit/github-action-create-ecr-repo-if-missing@v2
+        with:
+          DOCKER_REPO_NAME: ${{ env.IMAGE_NAME }} # Your repo name goes here
+          NUM_DAYS_BEFORE_EXPIRING_UNTAGGED_IMAGES: 2
+          NUM_TAGGED_IMAGES_TO_RETAIN: 5
+          TAG_PREFIX: v${{env.NEXT_TAG}}
+
+      - name: Docker meta
+        id: meta_cloudzero_agent
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          # cloudzero/cloudzero-agent
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=raw,value=${{env.NEXT_TAG}}
+            type=raw,value=latest,enable=true
+          labels: |
+            app.kubernetes.io/name=${{env.IMAGE_NAME}}
+            app.kubernetes.io/version=v${{env.NEXT_TAG}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: amazon-cloudwatch-container-insights/cloudwatch-agent-dockerfile/source/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta_cloudzero_agent.outputs.tags }}
+          cache-from: type=local,src=/tmp/buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/buildx-cache-new
+
+        # Temp fix
+        # https://github.com/docker/build-push-action/issues/252
+        # https://github.com/moby/buildkit/issues/1896
+      - name: Move cache
+        run: |
+          rm -rf /tmp/buildx-cache
+          mv /tmp/buildx-cache-new /tmp/buildx-cache
+
+
+      - name: Image digest
+        run: echo '${{ steps.docker_build.outputs.digest }}'
