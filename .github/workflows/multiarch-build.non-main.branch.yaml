@@ -7,12 +7,13 @@
 # branch cloudzero_optimized
 
 
-name: Multi-arch Builds
+name: Multi-arch Builds for all branch not name main
 
 # Controls when the workflow will run
 on:
   push:
     branches:
+      - 'main'
   workflow_dispatch:
 
 permissions: 
@@ -31,6 +32,7 @@ jobs:
       # the version of the container is the latest git tag.
       # This pull in the git tags
       - name: get fetch to update tags locally
+        if: ${{ !env.act }} # skip if running using act on local machine
         run: git fetch --prune --unshallow --tags
 
       - name: Set Image Name
@@ -96,7 +98,7 @@ jobs:
             type=raw,value=${{env.NEXT_TAG}}
             type=raw,value=latest,enable=true
           labels: |
-            app.kubernetes.io/name=${{ env.IMAGE_NAME**/ }}
+            app.kubernetes.io/name=${{env.IMAGE_NAME}}
             app.kubernetes.io/version=v${{env.NEXT_TAG}}
 
       - name: Build and push
