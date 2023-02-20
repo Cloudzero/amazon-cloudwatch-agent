@@ -53,7 +53,7 @@ jobs:
       - name: add version for build
         run: |
           mkdir -p build/bin
-          echo '${{ env.NEXT_TAG }}' > build/bin/CEAGENT_VERSION
+          echo '${{ env.NEXT_TAG }}' > build/bin/CWAGENT_VERSION
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
@@ -87,6 +87,8 @@ jobs:
           DOCKER_REPO_NAME: ${{ env.IMAGE_NAME }} # Your repo name goes here
           NUM_DAYS_BEFORE_EXPIRING_UNTAGGED_IMAGES: 2
           NUM_TAGGED_IMAGES_TO_RETAIN: 5
+          TAG_PREFIX: v${{env.NEXT_TAG}}
+
 
       - name: Docker meta
         id: meta_cloudzero_agent
