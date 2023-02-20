@@ -64,8 +64,13 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: repository owner
-        run: echo '${{ github.repository_owner }}'
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/buildx-cache
+          key: ${{ github.ref }}-buildx
+          restore-keys: |
+            ${{ github.ref }}-buildx
 
       - name: Setup AWS Credentials to Deploy to Research Branch
         id: aws-deploy-credentials
@@ -88,7 +93,6 @@ jobs:
           NUM_DAYS_BEFORE_EXPIRING_UNTAGGED_IMAGES: 2
           NUM_TAGGED_IMAGES_TO_RETAIN: 5
           TAG_PREFIX: v${{env.NEXT_TAG}}
-
 
       - name: Docker meta
         id: meta_cloudzero_agent
@@ -114,6 +118,7 @@ jobs:
           tags: ${{ steps.meta_cloudzero_agent.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          load: true
 
       - name: Image digest
         run: echo '${{ steps.docker_build.outputs.digest }}'
