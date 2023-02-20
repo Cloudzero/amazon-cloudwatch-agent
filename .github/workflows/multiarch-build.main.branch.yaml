@@ -7,7 +7,7 @@
 # branch cloudzero_optimized
 
 
-name: Multi-arch Builds
+name: cloudzero-optimized Multi-arch Builds
 
 # Controls when the workflow will run
 on:
