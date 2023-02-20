@@ -13,6 +13,7 @@ name: Multi-arch Builds, local cache, for all branch not name main
 on:
   push:
     branches:
+      - '*'
       - '!cloudzero-optimized'
   workflow_dispatch:
 
