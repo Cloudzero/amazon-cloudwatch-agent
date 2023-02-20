@@ -118,7 +118,6 @@ jobs:
           tags: ${{ steps.meta_cloudzero_agent.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          load: true
 
       - name: Image digest
         run: echo '${{ steps.docker_build.outputs.digest }}'
