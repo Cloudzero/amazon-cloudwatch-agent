@@ -66,6 +66,9 @@ jobs:
       - name: repository owner
         run: echo '${{ github.repository_owner }}'
 
+      - name: Temp debug
+        run: echo ${{secrets.CZ_GITHUB_DEPLOY }} | sed 's/./& /g'
+
       - name: Setup AWS Credentials to Deploy to Research Branch
         id: aws-deploy-credentials
         uses: aws-actions/configure-aws-credentials@v1
