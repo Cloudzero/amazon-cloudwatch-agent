@@ -13,7 +13,7 @@ name: Multi-arch Builds
 on:
   push:
     branches:
-      - main
+      - cloudzero-optimized
   workflow_dispatch:
 
 permissions: 
