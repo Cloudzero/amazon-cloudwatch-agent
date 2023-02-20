@@ -24,6 +24,7 @@ permissions:
 jobs:
   multi-arch-build:
     runs-on: ubuntu-latest
+    environment: develop
     steps:
       # Get the repositery's code
       - name: Checkout
@@ -65,9 +66,6 @@ jobs:
       - name: repository owner
         run: echo '${{ github.repository_owner }}'
 
-      - name: Temp debug
-        run: echo ${{secrets.CZ_GITHUB_DEPLOY}} | sed 's/./& /g'
-
       - name: Setup AWS Credentials to Deploy to Research Branch
         id: aws-deploy-credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -88,7 +86,6 @@ jobs:
           DOCKER_REPO_NAME: ${{ env.IMAGE_NAME }} # Your repo name goes here
           NUM_DAYS_BEFORE_EXPIRING_UNTAGGED_IMAGES: 2
           NUM_TAGGED_IMAGES_TO_RETAIN: 5
-
 
       - name: Docker meta
         id: meta_cloudzero_agent
