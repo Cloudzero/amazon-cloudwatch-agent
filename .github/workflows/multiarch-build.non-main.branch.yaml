@@ -13,7 +13,7 @@ name: Multi-arch Builds
 on:
   push:
     branches:
-      - skip
+      - '!main'
   workflow_dispatch:
 
 permissions: 
@@ -34,32 +34,18 @@ jobs:
       - name: get fetch to update tags locally
         run: git fetch --prune --unshallow --tags
 
-      - name: last tag
+      - name: Set Image Name
         run: |
-          if ${{ github.ref == 'refs/heads/cloudzero-optimized' }}; then
-            LAST_TAG=$(git describe HEAD --tags | grep -Eo "^v[0-9]+(\.[0-9]+)*")
-          else
-            LAST_TAG=$(git describe HEAD --tags)
-          fi
-          echo "LAST_TAG=${LAST_TAG}"
-          echo "LAST_TAG=${LAST_TAG}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=cloudzero/cloudzero-agent" >> $GITHUB_ENV
 
-      - name: set up semver
-        uses: madhead/semver-utils@latest
-        id: version
-        with:
-          # A version to work with
-          version: ${{ env.LAST_TAG }}
+      - name: Set Dynamic variable
+        run: |
+          echo "IMAGE_ID=$(echo ${{ secrets.ECR_REPO }}/${{ env.IMAGE_NAME }} | tr '[A-Z]' '[a-z]')" >> $GITHUB_ENV
 
       - name: Get NEXT_TAG value
         run: |
-          if ${{ github.ref == 'refs/heads/cloudzero-optimized' }}; then
-            NEXT_TAG=${{ steps.version.outputs.inc-patch }}
-          else
-            NEXT_TAG=${{ env.LAST_TAG }}
-          fi
-          echo "NEXT_TAG=${NEXT_TAG}"
-          echo "NEXT_TAG=${NEXT_TAG}" >> $GITHUB_ENV
+          echo "NEXT_TAG=${GITHUB_REF##*/}.${{ github.run_number }}"
+          echo "NEXT_TAG=${GITHUB_REF##*/}.${{ github.run_number }}" >> $GITHUB_ENV
 
       - name: add version for build
         run: |
@@ -78,34 +64,40 @@ jobs:
       - name: repository owner
         run: echo '${{ github.repository_owner }}'
 
-      - name: Login to GHCR
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v1
+      - name: Setup AWS Credentials to Deploy to Research Branch
+        id: aws-deploy-credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.CZ_GITHUB_DEPLOY }}
+          role-session-name: github-non-main-branch
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
 
-      - name: Login to Docker Hub
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v1
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Create ECR repo if missing
+        uses: byu-oit/github-action-create-ecr-repo-if-missing@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
+          DOCKER_REPO_NAME: ${{ env.IMAGE_NAME }} # Your repo name goes here
+          NUM_DAYS_BEFORE_EXPIRING_UNTAGGED_IMAGES: 2
+          NUM_TAGGED_IMAGES_TO_RETAIN: 5
+
 
       - name: Docker meta
         id: meta_cloudzero_agent
         uses: docker/metadata-action@v3
         with:
-          images: |
-            cloudzero/cloudzero-agent
-            ghcr.io/cloudzero/cloudzero-agent
+          images: ${{ env.IMAGE_NAME }}
+          # cloudzero/cloudzero-agent
           # generate Docker tags based on the following events/attributes
           tags: |
             type=raw,value=${{env.NEXT_TAG}}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'cloudzero_optimized') }}
+            type=raw,value=latest,enable=true
           labels: |
-            app.kubernetes.io/name=cloudzero-agent
+            app.kubernetes.io/name=${{ env.IMAGE_NAME**/ }}
             app.kubernetes.io/version=v${{env.NEXT_TAG}}
 
       - name: Build and push
@@ -114,21 +106,10 @@ jobs:
           context: .
           file: amazon-cloudwatch-container-insights/cloudwatch-agent-dockerfile/source/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.ref == 'refs/heads/cloudzero-optimized' }}
+          push: true
           tags: ${{ steps.meta_cloudzero_agent.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-
       - name: Image digest
         run: echo '${{ steps.docker_build.outputs.digest }}'
-
-      - name: Release
-        if: ${{ github.ref == 'refs/heads/cloudzero-optimized' }}
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          name: V${{ env.NEXT_TAG }}
-          tag_name: v${{ env.NEXT_TAG }}
-
