@@ -12,8 +12,9 @@ name: Multi-arch Builds for all branch not name main
 # Controls when the workflow will run
 on:
   push:
-  #  branches:
-  #    - '!main'
+    branches:
+      - '*'
+      - '!cloudzero-optimized'
   workflow_dispatch:
 
 permissions: 
