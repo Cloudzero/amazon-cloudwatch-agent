@@ -34,6 +34,8 @@ jobs:
       - name: get fetch to update tags locally
         run: git fetch --prune --unshallow --tags
 
+      - uses: nelonoel/branch-name@v1.0.1
+
       - name: last tag
         run: |
           if ${{ github.ref == 'refs/heads/cloudzero-optimized' }}; then
@@ -73,7 +75,9 @@ jobs:
       # https://github.com/docker/setup-buildx-action
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: v0.9.1
 
       - name: repository owner
         run: echo '${{ github.repository_owner }}'
@@ -86,19 +90,11 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Login to Docker Hub
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-
       - name: Docker meta
         id: meta_cloudzero_agent
         uses: docker/metadata-action@v3
         with:
           images: |
-            cloudzero/cloudzero-agent
             ghcr.io/cloudzero/cloudzero-agent
           # generate Docker tags based on the following events/attributes
           tags: |
@@ -131,4 +127,5 @@ jobs:
         with:
           name: V${{ env.NEXT_TAG }}
           tag_name: v${{ env.NEXT_TAG }}
+          target_commitish: ${ BRANCH_NAME }
 
