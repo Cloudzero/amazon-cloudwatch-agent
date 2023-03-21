@@ -3,9 +3,6 @@ ARG GO_IMAGE=golang:latest
 ARG CERT_IMAGE=ubuntu:latest
 FROM $GO_IMAGE as builder
 
-# NOTE: This arg will be populated by docker buildx
-# https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
-ARG TARGETARCH
 ENV GOPROXY=direct
 RUN mkdir -p /go/src/github.com/aws/amazon-cloudwatch-agent/
 WORKDIR /go/src/github.com/aws/amazon-cloudwatch-agent/
@@ -16,6 +13,10 @@ ENV GO111MODULE=${GO111MODULE}
 COPY go.mod /go/src/github.com/aws/amazon-cloudwatch-agent/
 COPY go.sum /go/src/github.com/aws/amazon-cloudwatch-agent/
 RUN go mod download -x
+
+# NOTE: This arg will be populated by docker buildx
+# https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
+ARG TARGETARCH
 
 COPY . /go/src/github.com/aws/amazon-cloudwatch-agent/
 RUN make build-for-docker-${TARGETARCH}
