@@ -7,7 +7,7 @@ ENV GOPROXY=direct
 RUN mkdir -p /go/src/github.com/aws/amazon-cloudwatch-agent/
 WORKDIR /go/src/github.com/aws/amazon-cloudwatch-agent/
 
-ARG GO111MODULE="on go clean -modcache"
+ARG GO111MODULE="on"
 ENV GO111MODULE=${GO111MODULE}
 
 COPY go.mod /go/src/github.com/aws/amazon-cloudwatch-agent/
