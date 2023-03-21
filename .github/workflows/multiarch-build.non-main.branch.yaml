@@ -121,8 +121,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta_cloudzero_agent.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          buildkitd-flags: --debug
+#          cache-from: type=gha
+#          cache-to: type=gha,mode=max
 
       - name: Image digest
         run: echo '${{ steps.docker_build.outputs.digest }}'
