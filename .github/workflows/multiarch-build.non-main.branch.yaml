@@ -122,8 +122,8 @@ jobs:
           push: true
           tags: ${{ steps.meta_cloudzero_agent.outputs.tags }}
           buildkitd-flags: --debug
-#          cache-from: type=gha
-#          cache-to: type=gha,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Image digest
         run: echo '${{ steps.docker_build.outputs.digest }}'
