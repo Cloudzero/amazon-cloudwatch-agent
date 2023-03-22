@@ -10,6 +10,10 @@ WORKDIR /go/src/github.com/aws/amazon-cloudwatch-agent/
 ARG GO111MODULE="on"
 ENV GO111MODULE=${GO111MODULE}
 
+RUN echo $GOPATH
+RUN whoami
+RUN env
+
 COPY go.mod /go/src/github.com/aws/amazon-cloudwatch-agent/
 COPY go.sum /go/src/github.com/aws/amazon-cloudwatch-agent/
 RUN go mod download -x
@@ -19,6 +23,7 @@ RUN go mod download -x
 ARG TARGETARCH
 
 COPY . /go/src/github.com/aws/amazon-cloudwatch-agent/
+RUN go env GOCACHE
 RUN make build-for-docker-${TARGETARCH}
 
 # Install cert and binaries
