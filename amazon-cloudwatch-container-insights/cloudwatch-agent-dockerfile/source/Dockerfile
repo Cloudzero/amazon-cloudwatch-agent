@@ -12,7 +12,7 @@ ENV GO111MODULE=${GO111MODULE}
 
 COPY go.mod /go/src/github.com/aws/amazon-cloudwatch-agent/
 COPY go.sum /go/src/github.com/aws/amazon-cloudwatch-agent/
-RUN go mod download 
+RUN go mod download -x
 
 # NOTE: This arg will be populated by docker buildx
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
