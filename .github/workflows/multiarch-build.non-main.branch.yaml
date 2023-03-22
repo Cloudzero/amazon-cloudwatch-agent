@@ -115,12 +115,15 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v4
+        env:
+          BUILDX_NO_DEFAULT_ATTESTATION: 1
         with:
           context: .
           file: amazon-cloudwatch-container-insights/cloudwatch-agent-dockerfile/source/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta_cloudzero_agent.outputs.tags }}
+          provenance: false
           buildkitd-flags: --debug
           cache-from: type=gha
           cache-to: type=gha,mode=max
