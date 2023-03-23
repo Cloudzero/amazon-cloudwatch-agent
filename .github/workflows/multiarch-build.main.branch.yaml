@@ -34,8 +34,6 @@ jobs:
       - name: get fetch to update tags locally
         run: git fetch --prune --unshallow --tags
 
-      - uses: nelonoel/branch-name@v1.0.1
-
       - name: last tag
         run: |
           if ${{ github.ref == 'refs/heads/cloudzero-optimized' }}; then
@@ -131,5 +129,5 @@ jobs:
         with:
           name: V${{ env.NEXT_TAG }}
           tag_name: v${{ env.NEXT_TAG }}
-          target_commitish: ${ BRANCH_NAME }
+          target_commitish: cloudzero-optimized 
 
