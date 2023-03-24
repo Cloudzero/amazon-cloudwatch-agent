@@ -15,14 +15,15 @@ import (
 )
 
 type K8sDecorator struct {
-	started         bool
-	stores          []stores.K8sStore
-	shutdownC       chan bool
-	TagService      bool   `toml:"tag_service"`
-	ClusterName     string `toml:"cluster_name"`
-	HostIP          string `toml:"host_ip"`
-	NodeName        string `toml:"node_name"`
-	PrefFullPodName bool   `toml:"prefer_full_pod_name"`
+	started                 bool
+	stores                  []stores.K8sStore
+	shutdownC               chan bool
+	DisableMetricExtraction bool   `toml:"disable_metric_extraction"`
+	TagService              bool   `toml:"tag_service"`
+	ClusterName             string `toml:"cluster_name"`
+	HostIP                  string `toml:"host_ip"`
+	NodeName                string `toml:"node_name"`
+	PrefFullPodName         bool   `toml:"prefer_full_pod_name"`
 }
 
 func (k *K8sDecorator) Description() string {
@@ -55,6 +56,9 @@ OUTER:
 		structuredlogsadapter.TagMetricSource(metric)
 		// CloudZero remove Custom Metrics
 		//structuredlogsadapter.TagMetricRule(metric)
+		if !k.DisableMetricExtraction {
+			structuredlogsadapter.TagMetricRule(metric)
+		}
 		structuredlogsadapter.TagLogGroup(metric)
 		metric.AddTag(logscommon.LogStreamNameTag, k.NodeName)
 		out = append(out, metric)
