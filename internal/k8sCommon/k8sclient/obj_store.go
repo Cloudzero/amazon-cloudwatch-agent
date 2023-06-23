@@ -57,7 +57,7 @@ func (s *ObjStore) Add(obj interface{}) error {
 	// Handle a nil return
 	if toCacheObj == nil {
 		// Nothing to to add to cache
-		log.Printf("I! ignoring update obj")
+		// log.Printf("I! ignoring update obj")
 		return nil
 	}
 
