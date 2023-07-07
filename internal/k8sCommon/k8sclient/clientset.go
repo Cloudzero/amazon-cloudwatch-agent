@@ -77,7 +77,7 @@ func (c *K8sClient) init() {
 	} else if TrackRS == "False" || TrackRS == "false" {
 		log.Printf("I! CloudZero Tracking ReplicaSets is False.  Not tracking ReplicaSets")
 	} else {
-		log.Printf("I! CloudZero Environment Variable TrackRS set to unknown value %v", TrackRS)
+		log.Printf("I! CloudZero Environment Variable TrackRS set to unknown value [%v]", TrackRS)
 		log.Printf("I! CloudZero Tracking ReplicaSets is True as default")
 		c.ReplicaSet = new(replicaSetClient)
 	}
