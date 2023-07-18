@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 
@@ -70,16 +71,13 @@ func (c *K8sClient) init() {
 	// CloudZero replicasets produce high memory consumption when there are large number of replicSets e.g. 71,000
 	c.ReplicaSet = nil
 	var TrackRS = os.Getenv("TRACK_REPLICA_SETS")
-	log.Printf("D! CloudZero TraceRS is %v", TrackRS)
-	if TrackRS == "True" || TrackRS == "true" {
-		log.Printf("I! CloudZero Tracking ReplicaSets is True")
+	log.Printf("I! CloudZero TrackRS is %v", TrackRS)
+	setTrackRS, err := strconv.ParseBool(TrackRS)
+	if err != nil || setTrackRS == true {
+		log.Printf("I! CloudZero Tracking ReplicaSets is True: %v", TrackRS)
 		c.ReplicaSet = new(replicaSetClient)
-	} else if TrackRS == "False" || TrackRS == "false" {
-		log.Printf("I! CloudZero Tracking ReplicaSets is False.  Not tracking ReplicaSets")
 	} else {
-		log.Printf("I! CloudZero Environment Variable TrackRS set to unknown value [%v]", TrackRS)
-		log.Printf("I! CloudZero Tracking ReplicaSets is True as default")
-		c.ReplicaSet = new(replicaSetClient)
+		log.Printf("I! CloudZero Tracking ReplicaSets is False.  Not tracking ReplicaSets")
 	}
 	c.inited = true
 }
