@@ -1,8 +1,16 @@
 export BASE_SPACE=$(shell pwd)
 export BUILD_SPACE=$(BASE_SPACE)/build
+export PATH_CWAGENT_VERSION_FILE=$(BUILD_SPACE)/bin/CWAGENT_VERSION
 
-VERSION = $(shell echo `git describe --tag --dirty``git status --porcelain 2>/dev/null| grep -q "^??" &&echo '-untracked'`)
-VERSION := $(shell echo ${VERSION} | sed -e "s/^v//")
+version_file_exists := $(wildcard ${PATH_CWAGENT_VERSION_FILE})
+
+ifdef version_file_exists
+	VERSION = $(shell cat ${PATH_CWAGENT_VERSION_FILE} )
+else
+	VERSION = $(shell echo `git describe --tag --dirty``git status --porcelain 2>/dev/null| grep -q "^??" &&echo '-untracked'`)
+	VERSION := $(shell echo ${VERSION} | sed -e "s/^v//")
+endif
+
 nightly-release: VERSION := $(shell echo ${VERSION}-nightly-build)
 # In case building outside of a git repo, use the version presented in the CWAGENT_VERSION file as a fallback
 ifeq ($(VERSION),)
@@ -54,7 +62,7 @@ create-version-file:
 
 copy-version-file: create-version-file
 	mkdir -p build/bin/
-	cp CWAGENT_VERSION $(BUILD_SPACE)/bin/CWAGENT_VERSION
+	cp CWAGENT_VERSION $(PATH_CWAGENT_VERSION_FILE)
 
 amazon-cloudwatch-agent: copy-version-file
 	@echo Building amazon-cloudwatch-agent
