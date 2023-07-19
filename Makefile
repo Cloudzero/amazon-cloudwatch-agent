@@ -26,6 +26,8 @@ DARWIN_BUILD_ARM64 = GO111MODULE=on GOOS=darwin GOARCH=arm64 go build -ldflags="
 
 IMAGE = amazon/cloudwatch-agent:$(VERSION)
 DOCKER_BUILD_FROM_SOURCE = docker build -t $(IMAGE) -f ./amazon-cloudwatch-container-insights/cloudwatch-agent-dockerfile/source/Dockerfile
+DOCKER_BUILD_FROM_SOURCE_ARM64 = docker buildx build --platform linux/arm64 --push  -t $(IMAGE) -f ./amazon-cloudwatch-container-insights/cloudwatch-agent-dockerfile/source/Dockerfile
+DOCKER_BUILD_FROM_SOURCE_AMD64 = docker buildx build --platform linux/amd64 --push  -t $(IMAGE) -f ./amazon-cloudwatch-container-insights/cloudwatch-agent-dockerfile/source/Dockerfile
 
 CW_AGENT_IMPORT_PATH=https://github.com/aws/amazon-cloudwatch-agent.git
 ALL_SRC := $(shell find . -name '*.go' -type f | sort)
@@ -251,6 +253,12 @@ package-darwin: package-prepare-darwin-tar
 dockerized-build:
 	$(DOCKER_BUILD_FROM_SOURCE) .
 	@echo Built image:
+	@echo $(IMAGE)
+
+.PHONY: dockerized-build-amd64 dockerized-build-vendor
+dockerized-build-amd64:
+	$(DOCKER_BUILD_FROM_SOURCE_AMD64) .
+	@echo Built amd64 image:
 	@echo $(IMAGE)
 
 # Use vendor instead of proxy when building w/ vendor folder

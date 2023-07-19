@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 
@@ -68,7 +69,16 @@ func (c *K8sClient) init() {
 	c.Pod = new(podClient)
 	c.Node = new(nodeClient)
 	// CloudZero replicasets produce high memory consumption when there are large number of replicSets e.g. 71,000
-	c.ReplicaSet = new(replicaSetClient)
+	c.ReplicaSet = nil
+	var TrackRS = os.Getenv("TRACK_REPLICA_SETS")
+	log.Printf("I! CloudZero TrackRS is %v", TrackRS)
+	setTrackRS, err := strconv.ParseBool(TrackRS)
+	if err != nil || setTrackRS == true {
+		log.Printf("I! CloudZero Tracking ReplicaSets is True: %v", TrackRS)
+		c.ReplicaSet = new(replicaSetClient)
+	} else {
+		log.Printf("I! CloudZero Tracking ReplicaSets is False.  Not tracking ReplicaSets")
+	}
 	c.inited = true
 }
 
