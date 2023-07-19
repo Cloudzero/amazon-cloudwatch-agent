@@ -4,8 +4,6 @@
 name: AWS Daily Resources Cleaner
 
 on:
-  schedule:
-    - cron: "0 0 * * *" # Run Every Day At Midnight
   workflow_dispatch:
 
 jobs:
