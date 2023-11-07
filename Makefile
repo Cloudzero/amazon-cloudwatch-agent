@@ -272,3 +272,23 @@ dockerized-build-amd64:
 # Use vendor instead of proxy when building w/ vendor folder
 dockerized-build-vendor:
 	$(DOCKER_BUILD_FROM_SOURCE) --build-arg GO111MODULE=off .
+
+.PHONY: create-eks-cluster
+create-eks-cluster:
+	@eksctl create cluster \
+		--name $(namespace) \
+		--region $(region)  \
+		--zones $(region)a,$(region)b
+
+.PHONY: destroy-eks-cluster
+destroy-eks-cluster:
+	@eksctl delete cluster --name=$(namespace)
+
+.PHONY: deploy-test
+deploy-test:
+	@helm upgrade --install cloudzero-cloudwatch-metrics cloudzero/cloudzero-cloudwatch-metrics \
+        --namespace cloudzero-metrics --create-namespace \
+        --set clusterName=$(namespace) \
+        --set images.pullPolicy=Always \
+        --set image.repository=$(image_repo) \
+        --set image.tag=$(image_tag)
