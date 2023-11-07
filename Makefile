@@ -277,12 +277,12 @@ dockerized-build-vendor:
 create-eks-cluster:
 	@eksctl create cluster \
 		--name $(namespace) \
-		--region us-east-1 \
-		--zones us-east-1a,us-east-1b
+		--region $(region)  \
+		--zones $(region)a,$(region)b
 
 .PHONY: destroy-eks-cluster
 destroy-eks-cluster:
-	@eksctl delete cluster --region=us-east-1 --name=$(namespace)
+	@eksctl delete cluster --name=$(namespace)
 
 .PHONY: deploy-test
 deploy-test:
