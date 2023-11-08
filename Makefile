@@ -46,6 +46,9 @@ GOIMPORTS_OPT?= -w -local $(CW_AGENT_IMPORT_PATH)
 GOIMPORTS = $(TOOLS_BIN_DIR)/goimports
 SHFMT = $(TOOLS_BIN_DIR)/shfmt
 LINTER = $(TOOLS_BIN_DIR)/golangci-lint
+
+REQUIRED_GO_VERSION := 1.19
+
 release: clean test build package-rpm package-deb package-win package-darwin
 
 nightly-release: release
@@ -287,22 +290,23 @@ destroy-eks-cluster:
 .PHONY: deploy-test
 deploy-test:
 	@helm upgrade --install cloudzero-cloudwatch-metrics cloudzero/cloudzero-cloudwatch-metrics \
-        --namespace cloudzero-metrics --create-namespace \
+        --namespace $(namespace)-cloudzero-metrics --create-namespace \
         --set clusterName=$(namespace) \
         --set images.pullPolicy=Always \
         --set image.repository=$(image_repo) \
         --set image.tag=$(image_tag)
 
-REQUIRED_GO_VERSION := go1.19.12
 
 .PHONY: init
 init:
-	@installed_version=$$(go version | cut -d' ' -f3); \
-	if [ "$$installed_version" != "$(REQUIRED_GO_VERSION)" ]; then \
-		echo "Incorrect Go version. Required: $(REQUIRED_GO_VERSION), Installed: $$installed_version"; \
-		exit 1; \
+	@go_version=$$(go version | cut -d' ' -f3 | sed 's/go//'); \
+	check_string=$(REQUIRED_GO_VERSION); \
+	if (echo "$$go_version" | grep -q "$(REQUIRED_GO_VERSION)"); then \
+		echo "Correct Go version is installed: Go $$go_version Installed Go ${REQUIRED_GO_VERSION} is required";\
+		echo "Installing Dependencies"; \
+		go mod download; \
 	else \
-	  echo "Correct Go version: $$installed_version";\
-	  echo "Installing Dependencies"; \
-	  go mod download; \
-  fi
+		echo "Incorrect Go version. Required: $(REQUIRED_GO_VERSION), Installed: $$go_version"; \
+		echo "Please download and install $(REQUIRED_GO_VERSION) using brew or other method of your choice"; \
+		exit 1; \
+	fi
