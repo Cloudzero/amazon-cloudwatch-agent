@@ -292,3 +292,17 @@ deploy-test:
         --set images.pullPolicy=Always \
         --set image.repository=$(image_repo) \
         --set image.tag=$(image_tag)
+
+REQUIRED_GO_VERSION := go1.19.12
+
+.PHONY: init
+init:
+	@installed_version=$$(go version | cut -d' ' -f3); \
+	if [ "$$installed_version" != "$(REQUIRED_GO_VERSION)" ]; then \
+		echo "Incorrect Go version. Required: $(REQUIRED_GO_VERSION), Installed: $$installed_version"; \
+		exit 1; \
+	else \
+	  echo "Correct Go version: $$installed_version";\
+	  echo "Installing Dependencies"; \
+	  go mod download; \
+  fi
