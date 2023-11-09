@@ -300,8 +300,7 @@ deploy-test:
 .PHONY: init
 init:
 	@go_version=$$(go version | cut -d' ' -f3 | sed 's/go//'); \
-	check_string=$(REQUIRED_GO_VERSION); \
-	if (echo "$$go_version" | grep -q "$(REQUIRED_GO_VERSION)"); then \
+	if (echo "$$go_version" | grep -qw "$(REQUIRED_GO_VERSION)"); then \
 		echo "Correct Go version is installed: Go $$go_version Installed Go ${REQUIRED_GO_VERSION} is required";\
 		echo "Installing Dependencies"; \
 		go mod download; \
