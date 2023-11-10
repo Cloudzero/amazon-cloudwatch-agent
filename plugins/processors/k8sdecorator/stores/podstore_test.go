@@ -340,9 +340,7 @@ func TestPodStore_addLabel(t *testing.T) {
 	assert.Equal(t, expected, kubernetesBlob)
 }
 
-//
 // Mock client start
-//
 var mockClient = new(MockClient)
 
 var mockK8sClient = &k8sclient.K8sClient{
@@ -375,9 +373,7 @@ func (client *MockClient) Shutdown() {
 // Mock client end
 //
 
-//
 // Mock client 2 start
-//
 var mockClient2 = new(MockClient2)
 
 var mockK8sClient2 = &k8sclient.K8sClient{
@@ -423,7 +419,19 @@ func TestGetJobNamePrefix(t *testing.T) {
 	assert.Equal(t, "", getJobNamePrefix(""))
 }
 
-func TestPodStore_addPodOwnersAndPodNameFallback(t *testing.T) {
+// CloudZero - added test for addPodName method
+func TestPodStore_addPodName(t *testing.T) {
+	podStore := &PodStore{}
+	pod := getBaseTestPodInfo()
+	tags := map[string]string{MetricType: TypePod, ContainerNamekey: "ubuntu"}
+	m := metric.New("test", tags, map[string]interface{}{}, time.Now())
+	podStore.addPodName(m, pod)
+	expectedPodName := "cpu-limit"
+	assert.Equal(t, expectedPodName, m.Tags()[PodNameKey])
+}
+
+// CloudZero - altered test to test the addPodOwnersAndWorkloadName method
+func TestPodStore_addPodOwnersAndWorkloadNameFallback(t *testing.T) {
 	k8sclient.Get = mockGet2
 	mockClient2.On("ReplicaSetToDeployment").Return(map[string]string{})
 
@@ -433,34 +441,33 @@ func TestPodStore_addPodOwnersAndPodNameFallback(t *testing.T) {
 	m := metric.New("test", tags, map[string]interface{}{}, time.Now())
 
 	// Test ReplicaSet
-	m = metric.New("test", tags, map[string]interface{}{}, time.Now())
 	rsName := "ReplicaSetTest"
 	suffix := "-42kcz"
 	pod.OwnerReferences[0].Kind = ReplicaSet
 	pod.OwnerReferences[0].Name = rsName + suffix
 	kubernetesBlob := map[string]interface{}{}
-	podStore.addPodOwnersAndPodName(m, pod, kubernetesBlob)
+	podStore.addPodOwnersAndWorkloadName(m, pod, kubernetesBlob)
 	expectedOwner := map[string]interface{}{}
 	expectedOwner["pod_owners"] = []Owner{{OwnerKind: Deployment, OwnerName: rsName}}
 	expectedOwnerName := rsName
-	assert.Equal(t, expectedOwnerName, m.Tags()[PodNameKey])
+	assert.Equal(t, expectedOwnerName, m.Tags()[WorkloadNameKey])
 	assert.Equal(t, expectedOwner, kubernetesBlob)
 
 	// Test Job
-	m = metric.New("test", tags, map[string]interface{}{}, time.Now())
 	jobName := "Job"
 	suffix = "-0123456789"
 	pod.OwnerReferences[0].Kind = Job
 	pod.OwnerReferences[0].Name = jobName + suffix
 	kubernetesBlob = map[string]interface{}{}
-	podStore.addPodOwnersAndPodName(m, pod, kubernetesBlob)
+	podStore.addPodOwnersAndWorkloadName(m, pod, kubernetesBlob)
 	expectedOwner["pod_owners"] = []Owner{{OwnerKind: CronJob, OwnerName: jobName}}
 	expectedOwnerName = jobName
-	assert.Equal(t, expectedOwnerName, m.Tags()[PodNameKey])
+	assert.Equal(t, expectedOwnerName, m.Tags()[WorkloadNameKey])
 	assert.Equal(t, expectedOwner, kubernetesBlob)
 }
 
-func TestPodStore_addPodOwnersAndPodName(t *testing.T) {
+// CloudZero - altered test to test the addPodOwnersAndWorkloadName method
+func TestPodStore_addPodOwnersAndWorkloadName(t *testing.T) {
 	k8sclient.Get = mockGet
 	mockClient.On("ReplicaSetToDeployment").Return(map[string]string{"DeploymentTest-sftrz2785": "DeploymentTest"})
 
@@ -472,12 +479,12 @@ func TestPodStore_addPodOwnersAndPodName(t *testing.T) {
 
 	// Test DaemonSet
 	kubernetesBlob := map[string]interface{}{}
-	podStore.addPodOwnersAndPodName(m, pod, kubernetesBlob)
+	podStore.addPodOwnersAndWorkloadName(m, pod, kubernetesBlob)
 
 	expectedOwner := map[string]interface{}{}
 	expectedOwner["pod_owners"] = []Owner{{OwnerKind: DaemonSet, OwnerName: "DaemonSetTest"}}
 	expectedOwnerName := "DaemonSetTest"
-	assert.Equal(t, expectedOwnerName, m.Tags()[PodNameKey])
+	assert.Equal(t, expectedOwnerName, m.Tags()[WorkloadNameKey])
 	assert.Equal(t, expectedOwner, kubernetesBlob)
 
 	// Test ReplicaSet
@@ -486,10 +493,10 @@ func TestPodStore_addPodOwnersAndPodName(t *testing.T) {
 	pod.OwnerReferences[0].Kind = ReplicaSet
 	pod.OwnerReferences[0].Name = rsName
 	kubernetesBlob = map[string]interface{}{}
-	podStore.addPodOwnersAndPodName(m, pod, kubernetesBlob)
+	podStore.addPodOwnersAndWorkloadName(m, pod, kubernetesBlob)
 	expectedOwner["pod_owners"] = []Owner{{OwnerKind: ReplicaSet, OwnerName: rsName}}
 	expectedOwnerName = rsName
-	assert.Equal(t, expectedOwnerName, m.Tags()[PodNameKey])
+	assert.Equal(t, expectedOwnerName, m.Tags()[WorkloadNameKey])
 	assert.Equal(t, expectedOwner, kubernetesBlob)
 
 	// Test StatefulSet
@@ -498,10 +505,10 @@ func TestPodStore_addPodOwnersAndPodName(t *testing.T) {
 	pod.OwnerReferences[0].Kind = StatefulSet
 	pod.OwnerReferences[0].Name = ssName
 	kubernetesBlob = map[string]interface{}{}
-	podStore.addPodOwnersAndPodName(m, pod, kubernetesBlob)
+	podStore.addPodOwnersAndWorkloadName(m, pod, kubernetesBlob)
 	expectedOwner["pod_owners"] = []Owner{{OwnerKind: StatefulSet, OwnerName: ssName}}
-	expectedOwnerName = "cpu-limit"
-	assert.Equal(t, expectedOwnerName, m.Tags()[PodNameKey])
+	expectedOwnerName = "StatefulSetTest"
+	assert.Equal(t, expectedOwnerName, m.Tags()[WorkloadNameKey])
 	assert.Equal(t, expectedOwner, kubernetesBlob)
 
 	// Test ReplicationController
@@ -509,10 +516,10 @@ func TestPodStore_addPodOwnersAndPodName(t *testing.T) {
 	pod.OwnerReferences[0].Kind = ReplicationController
 	pod.OwnerReferences[0].Name = rcName
 	kubernetesBlob = map[string]interface{}{}
-	podStore.addPodOwnersAndPodName(m, pod, kubernetesBlob)
+	podStore.addPodOwnersAndWorkloadName(m, pod, kubernetesBlob)
 	expectedOwner["pod_owners"] = []Owner{{OwnerKind: ReplicationController, OwnerName: rcName}}
 	expectedOwnerName = rcName
-	assert.Equal(t, expectedOwnerName, m.Tags()[PodNameKey])
+	assert.Equal(t, expectedOwnerName, m.Tags()[WorkloadNameKey])
 	assert.Equal(t, expectedOwner, kubernetesBlob)
 
 	// Test Job
@@ -523,18 +530,18 @@ func TestPodStore_addPodOwnersAndPodName(t *testing.T) {
 	surfixHash := ".088123x12"
 	pod.OwnerReferences[0].Name = jobName + surfixHash
 	kubernetesBlob = map[string]interface{}{}
-	podStore.addPodOwnersAndPodName(m, pod, kubernetesBlob)
+	podStore.addPodOwnersAndWorkloadName(m, pod, kubernetesBlob)
 	expectedOwner["pod_owners"] = []Owner{{OwnerKind: Job, OwnerName: jobName + surfixHash}}
 	expectedOwnerName = jobName + surfixHash
-	assert.Equal(t, expectedOwnerName, m.Tags()[PodNameKey])
+	assert.Equal(t, expectedOwnerName, m.Tags()[WorkloadNameKey])
 	assert.Equal(t, expectedOwner, kubernetesBlob)
 
 	podStore.prefFullPodName = false
 	kubernetesBlob = map[string]interface{}{}
-	podStore.addPodOwnersAndPodName(m, pod, kubernetesBlob)
+	podStore.addPodOwnersAndWorkloadName(m, pod, kubernetesBlob)
 	expectedOwner["pod_owners"] = []Owner{{OwnerKind: Job, OwnerName: jobName}}
 	expectedOwnerName = jobName
-	assert.Equal(t, expectedOwnerName, m.Tags()[PodNameKey])
+	assert.Equal(t, expectedOwnerName, m.Tags()[WorkloadNameKey])
 	assert.Equal(t, expectedOwner, kubernetesBlob)
 
 	// Test Deployment
@@ -543,10 +550,10 @@ func TestPodStore_addPodOwnersAndPodName(t *testing.T) {
 	pod.OwnerReferences[0].Kind = ReplicaSet
 	pod.OwnerReferences[0].Name = dpName + "-sftrz2785"
 	kubernetesBlob = map[string]interface{}{}
-	podStore.addPodOwnersAndPodName(m, pod, kubernetesBlob)
+	podStore.addPodOwnersAndWorkloadName(m, pod, kubernetesBlob)
 	expectedOwner["pod_owners"] = []Owner{{OwnerKind: Deployment, OwnerName: dpName}}
 	expectedOwnerName = dpName
-	assert.Equal(t, expectedOwnerName, m.Tags()[PodNameKey])
+	assert.Equal(t, expectedOwnerName, m.Tags()[WorkloadNameKey])
 	assert.Equal(t, expectedOwner, kubernetesBlob)
 
 	// Test CronJob
@@ -555,10 +562,10 @@ func TestPodStore_addPodOwnersAndPodName(t *testing.T) {
 	pod.OwnerReferences[0].Kind = Job
 	pod.OwnerReferences[0].Name = cjName + "-1556582405"
 	kubernetesBlob = map[string]interface{}{}
-	podStore.addPodOwnersAndPodName(m, pod, kubernetesBlob)
+	podStore.addPodOwnersAndWorkloadName(m, pod, kubernetesBlob)
 	expectedOwner["pod_owners"] = []Owner{{OwnerKind: CronJob, OwnerName: cjName}}
 	expectedOwnerName = cjName
-	assert.Equal(t, expectedOwnerName, m.Tags()[PodNameKey])
+	assert.Equal(t, expectedOwnerName, m.Tags()[WorkloadNameKey])
 	assert.Equal(t, expectedOwner, kubernetesBlob)
 
 	// Test kube-proxy created in kops
@@ -568,17 +575,18 @@ func TestPodStore_addPodOwnersAndPodName(t *testing.T) {
 	pod.OwnerReferences = nil
 	pod.Name = kpName
 	kubernetesBlob = map[string]interface{}{}
-	podStore.addPodOwnersAndPodName(m, pod, kubernetesBlob)
-	assert.Equal(t, kpName, m.Tags()[PodNameKey])
+	podStore.addPodOwnersAndWorkloadName(m, pod, kubernetesBlob)
+	assert.Equal(t, kubeProxy, m.Tags()[WorkloadNameKey])
 	assert.True(t, len(kubernetesBlob) == 0)
 
 	podStore.prefFullPodName = false
 	m = metric.New("test", tags, map[string]interface{}{}, time.Now())
 	pod.OwnerReferences = nil
-	pod.Name = kpName
+	pod.Name = "pod-123"
 	kubernetesBlob = map[string]interface{}{}
-	podStore.addPodOwnersAndPodName(m, pod, kubernetesBlob)
-	assert.Equal(t, kubeProxy, m.Tags()[PodNameKey])
+	expectedWorkloadName := ""
+	podStore.addPodOwnersAndWorkloadName(m, pod, kubernetesBlob)
+	assert.Equal(t, expectedWorkloadName, m.Tags()[WorkloadNameKey])
 	assert.True(t, len(kubernetesBlob) == 0)
 }
 

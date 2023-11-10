@@ -152,7 +152,8 @@ func (p *PodStore) Decorate(metric telegraf.Metric, kubernetesBlob map[string]in
 			p.addStatus(metric, tags, &entry.pod)
 			addContainerCount(metric, tags, &entry.pod)
 			addContainerId(&entry.pod, tags, metric, kubernetesBlob)
-			p.addPodOwnersAndPodName(metric, &entry.pod, kubernetesBlob)
+			p.addPodOwnersAndWorkloadName(metric, &entry.pod, kubernetesBlob)
+			p.addPodName(metric, &entry.pod)
 			addLabels(&entry.pod, kubernetesBlob)
 		} else {
 			log.Printf("W! no pod information is found in podstore for pod %s", podKey)
@@ -534,59 +535,54 @@ func getJobNamePrefix(podName string) string {
 	return re.Split(podName, 2)[0]
 }
 
-func (p *PodStore) addPodOwnersAndPodName(metric telegraf.Metric, pod *corev1.Pod, kubernetesBlob map[string]interface{}) {
+// CloudZero - adding a method for adding a WorkloadName tag and pod owners
+func (p *PodStore) addPodOwnersAndWorkloadName(metric telegraf.Metric, pod *corev1.Pod, kubernetesBlob map[string]interface{}) {
 	var owners []Owner
-	podName := ""
+	workloadName := ""
 	for _, owner := range pod.OwnerReferences {
 		if owner.Kind != "" && owner.Name != "" {
 			kind := owner.Kind
-			name := owner.Name
+			workloadName = owner.Name
 			if owner.Kind == ReplicaSet && k8sclient.Get().ReplicaSet != nil {
 				// CloudZero - avoid high memory usage when cluster has many replicaSets. e.g. > 71,000
 				rsToDeployment := k8sclient.Get().ReplicaSet.ReplicaSetToDeployment()
 				if parent := rsToDeployment[owner.Name]; parent != "" {
 					kind = Deployment
-					name = parent
+					workloadName = parent
 				} else if parent := parseDeploymentFromReplicaSet(owner.Name); parent != "" {
 					profiler.Profiler.AddStats([]string{"k8sdecorator", "podstore", "rsToDeploymentMiss"}, 1)
 					kind = Deployment
-					name = parent
+					workloadName = parent
 				}
 			} else if owner.Kind == Job {
 				if parent := parseCronJobFromJob(owner.Name); parent != "" {
 					kind = CronJob
-					name = parent
+					workloadName = parent
 				} else if !p.prefFullPodName {
-					name = getJobNamePrefix(name)
+					workloadName = getJobNamePrefix(workloadName)
 				}
 			}
-			owners = append(owners, Owner{OwnerKind: kind, OwnerName: name})
+			owners = append(owners, Owner{OwnerKind: kind, OwnerName: workloadName})
 
-			if podName == "" {
-				// CloudZero - Set PodName to be the name of the owner. CloudZero will merge cost of
-				// all the pods together created by this "workload." e.g. All pods belonging to replicaset=coredns-64497985bdre grouped together
-				if owner.Kind == StatefulSet {
-					podName = pod.Name
-				} else if owner.Kind == DaemonSet || owner.Kind == Job || owner.Kind == ReplicaSet || owner.Kind == ReplicationController {
-					podName = name
-				}
-			}
 		}
 	}
 	if len(owners) > 0 {
 		kubernetesBlob["pod_owners"] = owners
 	}
-
-	// if podName is not set according to a well-known controllers, then set it to its own name
-	if podName == "" {
+	if workloadName == "" {
 		if strings.HasPrefix(pod.Name, kubeProxy) && !p.prefFullPodName {
-			podName = kubeProxy
+			workloadName = kubeProxy
 		} else {
-			podName = pod.Name
+			log.Printf("W! Cannot parse workloadName from %s", pod.Name)
 		}
 	}
+	metric.AddTag(WorkloadNameKey, workloadName)
 
-	metric.AddTag(PodNameKey, podName)
+}
+
+// CloudZero - adding a method for adding the podName
+func (p *PodStore) addPodName(metric telegraf.Metric, pod *corev1.Pod) {
+	metric.AddTag(PodNameKey, pod.Name)
 }
 
 func addContainerCount(metric telegraf.Metric, tags map[string]string, pod *corev1.Pod) {

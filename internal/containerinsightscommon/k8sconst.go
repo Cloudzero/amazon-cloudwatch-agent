@@ -12,6 +12,7 @@ const (
 	Kubernetes       = "kubernetes"
 	K8sNamespace     = "Namespace"
 	PodIdKey         = "PodId"
+	WorkloadNameKey  = "WorkloadName"
 	PodNameKey       = "PodName"
 	K8sPodNameKey    = "K8sPodName"
 	ContainerNamekey = "ContainerName"
