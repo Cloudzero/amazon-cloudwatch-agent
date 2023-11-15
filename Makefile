@@ -278,10 +278,10 @@ dockerized-build-vendor:
 
 .PHONY: create-eks-cluster
 create-eks-cluster:
-	@eksctl create cluster \
-		--name $(namespace) \
-		--region $(region)  \
-		--zones $(region)a,$(region)b
+	sed -i '' 's/<namespace>/$(namespace)/g' NodeGroups.yaml
+	sed -i '' 's/<region>/$(region)/g' NodeGroups.yaml
+	eksctl create cluster --config-file=NodeGroups.yaml
+
 
 .PHONY: destroy-eks-cluster
 destroy-eks-cluster:
@@ -296,7 +296,6 @@ deploy-test:
         --set image.repository=$(image_repo) \
         --set image.tag=$(image_tag)
 
-
 .PHONY: init
 init:
 	@go_version=$$(go version | cut -d' ' -f3 | sed 's/go//'); \
@@ -309,3 +308,9 @@ init:
 		echo "Please download and install $(REQUIRED_GO_VERSION) using brew or other method of your choice"; \
 		exit 1; \
 	fi
+
+smoke-test:
+	make create-eks-cluster
+	make deploy-test
+	go test Tools/cz_tests/cz_integration_test.go --logGroupName="/aws/containerinsights/$(namespace)/performance" --region="$(region)"
+	make destroy-eks-cluster
