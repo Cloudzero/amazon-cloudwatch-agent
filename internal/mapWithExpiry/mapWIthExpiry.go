@@ -44,6 +44,14 @@ func (m *MapWithExpiry) Size() int {
 	return len(m.entris)
 }
 
+func (m *MapWithExpiry) GetAllEntries() map[string]*mapEntry {
+	return m.entris
+}
+
+func (m *MapWithExpiry) TTL() time.Duration {
+	return m.ttl
+}
+
 func (m *MapWithExpiry) Delete(key string) {
 	delete(m.entris, key)
 }
