@@ -9,7 +9,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"os"
 
+	"github.com/aws/amazon-cloudwatch-agent/cfg/envconfig"
 	. "github.com/aws/amazon-cloudwatch-agent/internal/containerinsightscommon"
 	"github.com/aws/amazon-cloudwatch-agent/internal/k8sCommon/k8sclient"
 	"github.com/aws/amazon-cloudwatch-agent/internal/k8sCommon/kubeletutil"
@@ -162,6 +164,13 @@ func (p *PodStore) Decorate(metric telegraf.Metric, kubernetesBlob map[string]in
 	return true
 }
 
+func (p *PodStore) getCachedEntryNoLock(podKey string) *cachedEntry {
+	if content, ok := p.cache.Get(podKey); ok {
+		return content.(*cachedEntry)
+	}
+	return nil
+}
+
 func (p *PodStore) getCachedEntry(podKey string) *cachedEntry {
 	p.Lock()
 	defer p.Unlock()
@@ -206,14 +215,49 @@ func (p *PodStore) cleanup(now time.Time) {
 	p.cache.CleanUp(now)
 }
 
+func (p *PodStore) exposeCache() {
+	p.Lock()
+	defer p.Unlock()
+
+	now := time.Now()
+	log.Printf("D! [PodStore.exposeCache] Exposing cache with '%d' entries...", p.cache.Size())
+
+	if p.cache.Size() == 0 {
+		log.Printf("D! [PodStore.exposecache] Cache is currently empty!")
+	} else {
+		for k, _ := range p.cache.GetAllEntries() {
+			v := p.getCachedEntryNoLock(k)
+			remaining := int((p.cache.TTL() - now.Sub(v.creation)) / time.Second)
+			log.Printf("D! [PodStore.exposecache] Entry: [podKey: %s, remainingTime: %ds]", k, remaining)
+		}
+		log.Print("D! [PodStore.exposecache] Finished exposing cache")
+	}
+}
+
 func (p *PodStore) refreshInternal(now time.Time, podList []corev1.Pod) {
 	var podCount int
 	var containerCount int
 	var cpuRequest int64
 	var memRequest int64
 
+	log.Print("D! [PodStore.refreshInternal] Refreshing PodStore!")
+	log.Printf("D! [PodStore.refreshInternal] Node Stats: '%+v'", p.getNodeStats())
+					
+	// Only expose the cache if debug is enabled.
+	// Large caches could flood the logs.
+	logLevel := os.Getenv(envconfig.CWAGENT_LOG_LEVEL)
+	if logLevel == "DEBUG" {
+		p.exposeCache()
+	}
+
 	for _, pod := range podList {
 		podKey := createPodKeyFromMetaData(&pod)
+
+		log.Printf("D! [PodStore.refreshInternal] Refreshing Pod: '%s': ", pod.Name)
+		log.Printf("D! [PodStore.refreshInternal] PodKey: '%s'", podKey)
+		log.Printf("D! [PodStore.refreshInternal] Pod Phase: '%s'", pod.Status.Phase)
+		log.Printf("D! [PodStore.refreshInternal] Node Name: '%s'", pod.Spec.NodeName)
+
 		if podKey == "" {
 			log.Printf("W! podKey is unavailable refresh pod store for pod %s", pod.Name)
 			continue
@@ -227,6 +271,9 @@ func (p *PodStore) refreshInternal(now time.Time, podList []corev1.Pod) {
 		}
 
 		for _, containerStatus := range pod.Status.ContainerStatuses {
+
+			log.Printf("D! [PodStore.refreshInternal] Container Information: [name: '%v', state: '%v']", containerStatus.Name, containerStatus.State)
+
 			if containerStatus.State.Running != nil {
 				containerCount += 1
 			}
@@ -235,9 +282,15 @@ func (p *PodStore) refreshInternal(now time.Time, podList []corev1.Pod) {
 		p.setCachedEntry(podKey, &cachedEntry{
 			pod:      pod,
 			creation: now})
+
+		log.Printf("D! [PodStore.refreshInternal] Refresh for Pod '%s' is complete!\n\n", pod.Name)
 	}
 
+	log.Print("D! [PodStore.refreshInternal] Updating Node Stats...")
 	p.setNodeStats(nodeStats{podCnt: podCount, containerCnt: containerCount, memReq: memRequest, cpuReq: cpuRequest})
+	log.Printf("D! [PodStore.refreshInternal] Updated Node Stats: '%+v'", p.getNodeStats())
+
+	log.Print("D! [PodStore.refreshInternal] Refresh Complete!")
 }
 
 func (p *PodStore) decorateDiskDevice(metric telegraf.Metric, tags map[string]string) {
