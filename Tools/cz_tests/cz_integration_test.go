@@ -47,7 +47,7 @@ func TestGetCloudWatchLogGroupName(t *testing.T) {
 	}
 
 	if *region == "" {
-		t.Fatal("Please provide the CloudWatch log group name using the -logGroupName flag")
+		t.Fatal("Please provide the CloudWatch log group name using the -region flag")
 	}
 	logGroupName, err := getCloudWatchLogGroupName(*logGroupName, *region)
 
