@@ -227,8 +227,11 @@ func (p *PodStore) exposeCache() {
 	} else {
 		for k, _ := range p.cache.GetAllEntries() {
 			v := p.getCachedEntryNoLock(k)
-			remaining := int((p.cache.TTL() - now.Sub(v.creation)) / time.Second)
-			log.Printf("D! [PodStore.exposecache] Entry: [podKey: %s, remainingTime: %ds]", k, remaining)
+
+			if v != nil {
+				remaining := int((p.cache.TTL() - now.Sub(v.creation)) / time.Second)
+				log.Printf("D! [PodStore.exposecache] Entry: [podKey: %s, remainingTime: %ds]", k, remaining)
+			}
 		}
 		log.Print("D! [PodStore.exposecache] Finished exposing cache")
 	}
