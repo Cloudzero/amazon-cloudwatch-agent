@@ -278,8 +278,8 @@ dockerized-build-vendor:
 
 .PHONY: create-eks-cluster
 create-eks-cluster:
-	sed -i '' 's/<namespace>/$(namespace)/g' NodeGroups.yaml
-	sed -i '' 's/<region>/$(region)/g' NodeGroups.yaml
+	sed -i.bak 's|<namespace>|$(namespace)|g' NodeGroups.yaml && rm -f NodeGroups.yaml.bak
+	sed -i.bak 's|<region>|$(region)|g' NodeGroups.yaml && rm -f NodeGroups.yaml.bak
 	eksctl create cluster --config-file=NodeGroups.yaml
 
 
@@ -310,7 +310,7 @@ init:
 	fi
 
 smoke-test:
-	make create-eks-cluster
-	make deploy-test
 	go test Tools/cz_tests/cz_integration_test.go --logGroupName="/aws/containerinsights/$(namespace)/performance" --region="$(region)"
-	make destroy-eks-cluster
+
+integration-test:
+	go test Tools/cz_tests/cz_integration_test.go --logGroupName="/aws/containerinsights/$(namespace)/performance" --region="$(region)"
