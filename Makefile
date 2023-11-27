@@ -310,7 +310,7 @@ init:
 	fi
 
 smoke-test:
-	go test Tools/cz_tests/cz_integration_test.go --logGroupName="/aws/containerinsights/$(namespace)/performance" --region="$(region)"
+	go test tests/cz_smoke_test.go --logGroupName="/aws/containerinsights/$(namespace)/performance" --region="$(region)"
 
 integration-test:
-	go test Tools/cz_tests/cz_integration_test.go --logGroupName="/aws/containerinsights/$(namespace)/performance" --region="$(region)"
+	go test tests/cz_integration_test.go --logGroupName="/aws/containerinsights/$(namespace)/performance" --region="$(region)"
