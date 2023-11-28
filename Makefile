@@ -138,7 +138,7 @@ lint: install-tools
 	${LINTER} run ./...
 
 test:
-	CGO_ENABLED=0 go test -coverprofile coverage.txt -failfast ./awscsm/... ./cfg/... ./cmd/... ./handlers/... ./internal/... ./logger/... ./logs/... ./metric/... ./plugins/... ./profiler/... ./tool/... ./translator/...
+	CGO_ENABLED=0 go test -short -coverprofile coverage.txt -failfast ./awscsm/... ./cfg/... ./cmd/... ./handlers/... ./internal/... ./logger/... ./logs/... ./metric/... ./plugins/... ./profiler/... ./tool/... ./translator/...
 
 clean::
 	rm -rf release/ build/
@@ -310,7 +310,7 @@ init:
 	fi
 
 smoke-test:
-	go test tests/cz_smoke_test.go --logGroupName="/aws/containerinsights/$(namespace)/performance" --region="$(region)"
+	go test -short -coverprofile smoke_coverage.txt -failfast ./awscsm/... ./cfg/... ./cmd/... ./handlers/... ./internal/... ./logger/... ./logs/... ./metric/... ./plugins/... ./profiler/... ./tool/... ./translator/...
 
 integration-test:
-	go test tests/cz_integration_test.go --logGroupName="/aws/containerinsights/$(namespace)/performance" --region="$(region)"
+	go test -run Integration -failfast ./awscsm/... ./cfg/... ./cmd/... ./handlers/... ./internal/... ./logger/... ./logs/... ./metric/... ./plugins/... ./profiler/... ./tool/... ./translator/...

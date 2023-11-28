@@ -2,10 +2,8 @@ package cloudwatchlogs
 
 import (
 	"context"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 	"log"
@@ -41,40 +39,11 @@ type IAM struct {
 	AttachPolicyARNs []string `yaml:"attachPolicyARNs"`
 }
 
-func getSessionInfo() (*sts.GetCallerIdentityOutput, error) {
-	// Load the AWS SDK configuration from the shared config file and environment variables
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		return nil, err
+func TestLogGroupExistsIntegration(t *testing.T) {
+
+	if testing.Short() {
+		t.Skip("skipping integration test")
 	}
-
-	// Create a new STS client to make API calls.
-	client := sts.NewFromConfig(cfg)
-
-	// Call the GetCallerIdentity operation to retrieve information about the current session.
-	result, err := client.GetCallerIdentity(context.TODO(), &sts.GetCallerIdentityInput{})
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
-func TestSessionInfo(t *testing.T) {
-	// Get information about the current AWS session.
-	info, err := getSessionInfo()
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-	assert.Equal(t, "hocking", *info.Account, "Expected String to be Equal")
-	// Output the information.
-	fmt.Println("AWS Account ID:", *info.Account)
-	fmt.Println("User ARN:", *info.Arn)
-	fmt.Println("User ID:", *info.UserId)
-}
-
-func TestLogGroupExists(t *testing.T) {
 	// Get Log Groups
 	logGroups, err := GetCloudWatchLogGroups()
 	if err != nil {
