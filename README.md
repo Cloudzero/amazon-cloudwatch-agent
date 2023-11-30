@@ -79,7 +79,9 @@ The following targets are available. Each may be run with `make <target>`.
 | `dockerized-build`    | build using docker container without local go environment                                                         |
 | `create-eks-cluster`  | creates an EKS cluster (include namespace and region...namespace=foo region=bar)                                  |
 | `destroy-eks-cluster` | removes an EKS cluster and all it's associated assets (include namespace i.e. namespace=foo)                      |
-| `deploy-test` | deploys a version of the asset from a image repository (include namespacae=name image_tag-foo and image_repo=bar) |
+| `deploy-test`         | deploys a version of the asset from a image repository (include namespacae=name image_tag-foo and image_repo=bar) |
+| `smoke-test`          | run CloudZero smoke tests                                                                                         |
+| `integration-test`    | run CloudZero integration tests                                                                                   |
 ## Features
 ### Log Filtering
 CloudWatch agent supports log filtering, where the agent processes each log message with the filters that you specify, and only published events that pass all filters to CloudWatch Logs. See [docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Agent-Configuration-File-Details.html#CloudWatch-Agent-Configuration-File-Logssection) for details.
