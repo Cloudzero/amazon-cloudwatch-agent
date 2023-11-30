@@ -125,19 +125,19 @@ func TestUserAgent(t *testing.T) {
 			"container insights EKS",
 			"/aws/containerinsights/eks-cluster-name/performance",
 			fmt.Sprintf("CWAgent/VSTR (%v; %v; %v) BSTR inputs:(a b c) outputs:(x y z container_insights)", runtime.Version(), runtime.GOOS, runtime.GOARCH),
-			"\"container_insights\" flag shoould be in the outputs plugin list in container insights mode",
+			"\"container_insights\" flag should be in the outputs plugin list in container insights mode",
 		},
 		{
 			"container insights ECS",
 			"/aws/ecs/containerinsights/ecs-cluster-name/performance",
 			fmt.Sprintf("CWAgent/VSTR (%v; %v; %v) BSTR inputs:(a b c) outputs:(x y z container_insights)", runtime.Version(), runtime.GOOS, runtime.GOARCH),
-			"\"container_insights\" flag shoould be in the outputs plugin list in container insights mode",
+			"\"container_insights\" flag should be in the outputs plugin list in container insights mode",
 		},
 		{
 			"container insights prometheus",
 			"/aws/containerinsights/cluster-name/prometheus",
 			fmt.Sprintf("CWAgent/VSTR (%v; %v; %v) BSTR inputs:(a b c) outputs:(x y z container_insights)", runtime.Version(), runtime.GOOS, runtime.GOARCH),
-			"\"container_insights\" flag shoould be in the outputs plugin list in container insights mode",
+			"\"container_insights\" flag should be in the outputs plugin list in container insights mode",
 		},
 	}
 

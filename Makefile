@@ -138,7 +138,7 @@ lint: install-tools
 	${LINTER} run ./...
 
 test:
-	CGO_ENABLED=0 go test -coverprofile coverage.txt -failfast ./awscsm/... ./cfg/... ./cmd/... ./handlers/... ./internal/... ./logger/... ./logs/... ./metric/... ./plugins/... ./profiler/... ./tool/... ./translator/...
+	CGO_ENABLED=0 go test -short -coverprofile coverage.txt -failfast ./awscsm/... ./cfg/... ./cmd/... ./handlers/... ./internal/... ./logger/... ./logs/... ./metric/... ./plugins/... ./profiler/... ./tool/... ./translator/...
 
 clean::
 	rm -rf release/ build/
@@ -278,10 +278,10 @@ dockerized-build-vendor:
 
 .PHONY: create-eks-cluster
 create-eks-cluster:
-	@eksctl create cluster \
-		--name $(namespace) \
-		--region $(region)  \
-		--zones $(region)a,$(region)b
+	sed -i.bak 's|<namespace>|$(namespace)|g' NodeGroups.yaml && rm -f NodeGroups.yaml.bak
+	sed -i.bak 's|<region>|$(region)|g' NodeGroups.yaml && rm -f NodeGroups.yaml.bak
+	eksctl create cluster --config-file=NodeGroups.yaml
+
 
 .PHONY: destroy-eks-cluster
 destroy-eks-cluster:
@@ -296,7 +296,6 @@ deploy-test:
         --set image.repository=$(image_repo) \
         --set image.tag=$(image_tag)
 
-
 .PHONY: init
 init:
 	@go_version=$$(go version | cut -d' ' -f3 | sed 's/go//'); \
@@ -309,3 +308,9 @@ init:
 		echo "Please download and install $(REQUIRED_GO_VERSION) using brew or other method of your choice"; \
 		exit 1; \
 	fi
+
+smoke-test:
+	go test -short -coverprofile smoke_coverage.txt -failfast ./awscsm/... ./cfg/... ./cmd/... ./handlers/... ./internal/... ./logger/... ./logs/... ./metric/... ./plugins/... ./profiler/... ./tool/... ./translator/...
+
+integration-test:
+	go test -run Integration -failfast ./awscsm/... ./cfg/... ./cmd/... ./handlers/... ./internal/... ./logger/... ./logs/... ./metric/... ./plugins/... ./profiler/... ./tool/... ./translator/...
